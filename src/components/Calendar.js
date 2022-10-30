@@ -13,8 +13,10 @@ const weekDays = [
 const Calendar = (props) => {
     const [daysArray, setDays]       = useState(false)
     const [month, setMonth]    = useState(new Date().getMonth())
+    const currentMonth = getMonth(month)
+    console.log(currentMonth)
     const [date, setDate]       = useState({
-        day: new Date().getDay(),
+        day: new Date().getDate(),
         month: getMonth(month),
         year: new Date().getFullYear(),
     })
@@ -62,8 +64,6 @@ const Calendar = (props) => {
             ...prevState,
             month: name
         }));
-
-
         setMonth(newMonth)
     }
 
@@ -85,27 +85,27 @@ const Calendar = (props) => {
     let i = 0
 
     return (
-        <div className=' text-white flex flex-col w-72  items-center h-72'>
-            <div className='mb-2 w-full flex flex-row items-center'>
+        <div className=' text-white flex flex-col w-10/12  items-center h-96 '>
+            <div className='mb-2 w-full flex flex-row items-center '>
                 <div className=' w-4/6 py-2 flex flex-row items-center justify-center rounded-lg bg-gray-800'>
                     <button  onClick={() => changeMonth(false)}>
-                        <MdKeyboardArrowLeft/>
+                        <MdKeyboardArrowLeft size={35}/>
                     </button>
-                    <div className='mx-max w-4/6'>
+                    <div className='flex justify-center mx-max w-4/6'>
                         {date.month}
                     </div>
                     <button onClick={() => changeMonth(true)}>
-                        <MdKeyboardArrowRight/>
+                        <MdKeyboardArrowRight size={35}/>
                     </button>
                 </div>
-                <div className='ml-2 w-2/6 p-2 rounded-lg bg-gray-800'>
+                <div className='ml-2 w-2/6 h-[3.2rem] p-2 flex justify-center items-center rounded-lg bg-gray-800'>
                     {date.year}
                 </div> 
             </div>
-            <div className='grid grid-cols-7 w-full h-96 rounded-lg bg-gray-800 p-2'>
+            <div className='grid grid-cols-7 w-full h-[16rem] rounded-lg bg-gray-800 p-2'>
                 
-                {weekDays.map((e) => {
-                    return <div className='text-white p-1 '>{e}</div>
+                {weekDays.map((e,index) => {
+                    return <div key={index} className='text-white p-1 '>{e}</div>
                 })}
                 {daysArray ? daysArray.map((e, index) => {
                     let cls = 'text-white p-1 rounded-full hover:bg-red-400'
@@ -114,14 +114,15 @@ const Calendar = (props) => {
                             i = -1
                         cls = 'text-gray-500 p-1 rounded-full hover:bg-red-400'
                     }
+                    
                     i+=1
                     if(e == ''){
-                        return <div />
+                        return <div key={index}/>
                     }
                     if(e == selectedDate.day && date.month == selectedDate.month && date.year == selectedDate.year) {
-                        return <button className=' text-white p-1 rounded-full bg-red-400'>{e}</button> 
+                        return <button key={index} className=' text-white p-1 rounded-full bg-red-400'>{e}</button> 
                     }
-                    return <button onClick={() => selectDate(e)} className={cls}>{e}</button>
+                    return <button key={index} onClick={() => selectDate(e)} className={cls}>{e}</button>
                 })
                 : 'loading..'
             }
@@ -169,7 +170,6 @@ const getMonth = (month) => {
         default:
             return 'December'
     }
-
 }
 
 export default Calendar
