@@ -20,7 +20,7 @@ import { db } from './backend/firebase';
 function App() {
   const [user] = useAuthState(auth)
   const init = React.useRef(true)
-  const schedule = React.useRef()
+  const [schedule, setSchedule] = useState(null)
   const getData = async () => {
     console.log('fetching schedule')
     let data = []
@@ -29,13 +29,12 @@ function App() {
     querySnapshot.forEach((doc) => {
         // doc.data() is never undefined for query doc snapshots
         const newData = {id: doc.id, data: doc.data()}
-        console.log(newData)
         data.push(newData)
     });
-    schedule.current = data
+    setSchedule(data)
     console.log(data)
   }
-  console.log(schedule.current)
+  console.log(schedule)
 
   if(!user){
     return (
@@ -69,10 +68,10 @@ function App() {
     <Router>
       <Navigation/>
       <Routes>
-        <Route path='/' element={<Bookcar userid={user.uid} bookTimeF={(data) => bookTimeF(data)}/>}/>
-        <Route path='/calendar' element ={<ShowCalendar schedule={schedule.current}/>}/>
+        <Route path='/' element={<Bookcar schedule={schedule} userid={user.uid} bookTimeF={(data) => bookTimeF(data)}/>}/>
+        <Route path='/calendar' element ={<ShowCalendar schedule={schedule}/>}/>
       </Routes>
-      <button onClick={() => console.log(schedule.current)}></button>
+      <button onClick={() => console.log(schedule)}></button>
     </Router>
   );
 }

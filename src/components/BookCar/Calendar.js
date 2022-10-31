@@ -12,13 +12,10 @@ const weekDays = [
 
 const Calendar = (props) => {
     const [daysArray, setDays]       = useState(false)
-    const [month, setMonth]    = useState(new Date().getMonth())
-    const currentMonth = getMonth(month)
-    console.log(currentMonth)
     const [date, setDate]       = useState({
         day: new Date().getDate(),
-        month: getMonth(month),
-        year: new Date().getFullYear(),
+        month: getMonth(props.month),
+        year: props.year,
     })
 
     const [selectedDate, setSelectedDate] = useState({
@@ -28,45 +25,11 @@ const Calendar = (props) => {
     })
 
     useEffect(() => {
-            let days = new Date(date.year, (month + 1), 0).getDate();
-            let dayOW = new Date(date.year,month,0).getDay()
+            let days = new Date(date.year, (props.month + 1), 0).getDate();
+            let dayOW = new Date(date.year,props.month,0).getDay()
             setDays(makeDays(days, dayOW))
-    },[month])
+    },[])
     
-
-    const changeMonth = (increment) => {
-        let newMonth = month
-        if(increment){
-            newMonth = newMonth + 1
-            if(newMonth > 11){
-                newMonth = 0
-                let newYear = date.year + 1 
-                setDate(prevState => ({
-                    ...prevState,
-                    year: newYear
-                }));
-            }
-        }
-        else {
-            newMonth = newMonth -1
-            if(newMonth < 0){
-                newMonth = 11
-                let newYear = date.year - 1 
-                setDate(prevState => ({
-                    ...prevState,
-                    year: newYear
-                }));
-            }
-        }
-
-        let name = getMonth(newMonth)
-        setDate(prevState => ({
-            ...prevState,
-            month: name
-        }));
-        setMonth(newMonth)
-    }
-
     const selectDate = (day) => {
         setSelectedDate({
             day: day,
@@ -85,33 +48,25 @@ const Calendar = (props) => {
     let i = 0
 
     return (
-        <div className=' text-white flex flex-col w-10/12  items-center h-96 rounded-tr-[2rem] '>
-            <div className='mb-2 w-full flex flex-row items-center'>
-                <div className=' w-4/6 py-2 flex flex-row items-center justify-center rounded-lg bg-gray-800'>
-                    <button  onClick={() => changeMonth(false)}>
-                        <MdKeyboardArrowLeft size={35}/>
-                    </button>
-                    <div className='flex justify-center mx-max w-4/6'>
+        <div className=' text-black flex  flex-col w-screen px-5 items-center h-96 rounded-tr-[2rem]'>
+            <div className='mb-2 w-full flex flex-col items-center'>
+                    <a className='flex justify-center text-2xl text-black mx-max w-4/6'>
                         {date.month}
-                    </div>
-                    <button onClick={() => changeMonth(true)}>
-                        <MdKeyboardArrowRight size={35}/>
-                    </button>
-                </div>
-                <div className='ml-2 w-2/6 h-[3.2rem] p-2 flex justify-center items-center rounded-lg bg-gray-800'>
+                    </a>
+                <a className=''>
                     {date.year}
-                </div> 
+                </a> 
             </div>
-            <div className='grid grid-cols-7 w-full h-[16rem] rounded-lg bg-gray-800 p-2'>
+            <div className='grid grid-cols-7 rounded-lg w-full shadow h-[16rem] p-2'>
                 {weekDays.map((e,index) => {
-                    return <div key={index} className='text-white p-1 flex items-center justify-center'>{e}</div>
+                    return <div key={index} className=' p-1 flex items-center justify-center'>{e}</div>
                 })}
                 {daysArray ? daysArray.map((e, index) => {
-                    let cls = 'text-white p-1 rounded-full hover:bg-primary-2'
+                    let cls = ' p-1 border-b border-white hover:border-primary-2'
                     if(i == 5 || i == 6){
                         if(i == 6)
                             i = -1
-                        cls = 'text-gray-500 p-1 rounded-full hover:bg-primary-2'
+                        cls = 'text-gray-500 p-1 border-b border-white hover:border-primary-2'
                     }
                     
                     i+=1
@@ -119,9 +74,9 @@ const Calendar = (props) => {
                         return <div key={index}/>
                     }
                     if(e == selectedDate.day && date.month == selectedDate.month && date.year == selectedDate.year) {
-                        return <button key={index} className=' text-white p-1 rounded-full  bg-primary-2'>{e}</button> 
+                        return <button  onClick={() => selectDate(e)} key={index} className=' p-1 border-b border-primary-2'>{e}</button> 
                     }
-                    return <button key={index} onClick={() => selectDate(e)} className={cls}>{e}</button>
+                    return <button  onClick={() => selectDate(e)} className={cls}>{e}</button>
                 })
                 : 'loading..'
             }
