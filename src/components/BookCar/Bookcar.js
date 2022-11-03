@@ -1,10 +1,20 @@
 import React, { useRef, useState } from 'react'
 import Calendar from './Calendar'
-import {FaCarAlt, FaCheck} from 'react-icons/fa'
+import {FaCarAlt} from 'react-icons/fa'
 import {GoLocation} from 'react-icons/go'
-import {IoIosAdd} from 'react-icons/io'
+import ModalBookCar from './ModalBookCar'
+import FocusReservation from './FocusReservation'
 
+const cars = [
+    'Blue Van',
+    'SOH',
+    'Truck'
+]
 const Bookcar = (props) => {
+    const [showModal, setShowModal] = useState(false)
+    const [showReservation, setShowReservation] = useState(false)
+    const [viewReservation, setViewReservation] = useState()
+    const [errorMessage, setErrorMessage] = useState('')
     const month = useRef(new Date().getMonth())
     const year = useRef(new Date().getFullYear())
     let nextMonths = []
@@ -18,35 +28,73 @@ const Bookcar = (props) => {
         }
     }
     const [months, setMonths] = useState(nextMonths)
-    const [modalShowing, setModalShowing] = useState(false)
     const [data, setData] = useState({
-        userId: props.userId, 
-        driver: '',
-        day: '--',
-        month: '------',
+        id: props.userid, 
+        driver: null,
+        day: null,
+        month: null,
         year: '2022',
-        startHour: '--',
-        startMinute: '--',
-        endMinute: '--',
-        endMinute: '--',
-        reason: '???',
-        destination: '',
-        car: ''
+        startHour: '00',
+        startMinute: '00',
+        endHour: '00',
+        endMinute: '00',
+        reason: null,
+        destination: null,
+        car: null
     })
 
     const changeData = (value) => {
+        setErrorMessage('')
         value.map((e) => {
             setData(prevState => ({
                 ...prevState,
                 [e.name]: e.value
             }))
         })
-        setModalShowing(true)
     }
-    console.log(props.schedule)
 
+    const handleInput = (name, value) => {
+        setData(prevState => ({
+            ...prevState,
+            [name]: value
+        }))
+    }
+    const openModal = () => {
+        if(data.day != null){
+            setShowModal(true)
+        } else {
+            setErrorMessage('*please choose date of booking first*')
+        }
+    }
+
+    const bookTime = () => { 
+        props.bookTimeF(data)
+    }
+
+    const showReservationData = (object) => {
+        setViewReservation(object)
+        setShowReservation(true)
+    }
+
+    const clearData = () => {
+        setData ( prevState => ({
+            ... prevState,
+            'driver': null,
+            'startHour': '00',
+            'startMinute': '00',
+            'endHour': '00',
+            'endMinute': '00',
+            'reason': null,
+            'destination': null,
+            'car': null
+        }))
+    }
+
+
+    
     return(
-        <div className='flex items-center bg-white flex-col w-screen p-2 pb-20'>
+        <div className='flex items-center bg-white flex-col w-screen p-2 pb-20 pt-28'>
+            <p className='text-red-600'>{errorMessage}</p>
             <div className='flex items-center w-screen bg-white snap-x scroll-smooth p-2 gap-5 overflow-auto scrollbar snap-mandatory'>
                 {months.map((e,index) => {
                     return(
@@ -57,19 +105,31 @@ const Bookcar = (props) => {
                 })}
             </div>
             {props.schedule ? 
-                <div className='grid grid-cols-2 gap-5 w-screen flex items-center justify-center mt-2'>
+                <div className='grid grid-cols-2 w-screen flex items-center justify-center mt-2'>
                     {props.schedule.map((object, index) => {
                         let schedule = object.data
-                        console.log(schedule)
-                        if(schedule.month == data.month && schedule.day == data.day){
+                        if(schedule.month == data.month && schedule.day == data.day && schedule.year == data.year){
+                                let cls
+                                switch (schedule.car) {
+                                    case 'Blue Van':
+                                        cls = 'relative flex flex-col bg-blue-500 m-4 text-white rounded-lg shadow-lg'
+                                        break;
+                                    case 'Truck':
+                                        cls = 'relative flex flex-col bg-white m-4 rounded-lg text-black shadow-lg'
+                                        break;
+                                    default:
+                                        cls = 'relative flex flex-col bg-gray-400 m-4 text-white rounded-lg shadow-lg'
+
+                                }
+                            
                             return(
-                                <button key={index} className=' flex flex-col bg-primary-2 m-4 text-white rounded-lg flex items-center'>
-                                    <div className='bg-gray-800 w-full flex flex-col text-1xl rounded-t-lg p-2 '>
+                                <button onClick={() => showReservationData(object)} key={index} className={cls}>
+                                    <div className='bg-gray-800 w-full flex flex-col text-1xl rounded-t-lg p-2 items-center text-white'>
                                         <span className='mr-2 text-1xl font-bold'>{schedule.driver}</span>
                                         {`${schedule.startHour}:${schedule.startMinute} - ${schedule.endHour}:${schedule.endMinute}`}
                                     </div> 
-                                    <p className=' m-2 flex items-center justify-center font-semibold'><GoLocation/>{schedule.destination}</p>
-                                    <p className=' m-2 flex items-center justify-center font-semibold'><FaCarAlt/>{schedule.car}</p>
+                                    <p className=' mx-2 mt-1 flex items-center justify-center font-semibold'><GoLocation className='m-2'/>{schedule.destination}</p>
+                                    <p className=' mx-2 my-1 flex items-center justify-center font-semibold '><FaCarAlt className='m-2'/>{schedule.car}</p>
                                 </button> 
                             )
                         }
@@ -79,9 +139,32 @@ const Bookcar = (props) => {
                 :
                 <div/>
             }
-            <button className='fixed right-10 bottom-10 text-gray-800 bg-primary-2 rounded-full'>
-                <IoIosAdd size={50}/>
+            <button onClick={() => openModal()} className='text-white fixed right-10 bottom-10 p-3 shadow-lg bg-primary-2 rounded-full'>
+                <a>Book Car</a>
             </button>
+            <ModalBookCar
+                isShowing={showModal}
+                closeModal={() => setShowModal(false)}
+                handleInput={(name, value) => handleInput(name, value)}
+                chooseCar={(car) => handleInput('car', car)}
+                cars={cars}
+                data={data}
+                setData={(value) => changeData(value)}
+                bookTime={bookTime}
+                clearData={clearData}
+                />
+            <FocusReservation
+                isShowing={showReservation}
+                closeModal={() => setShowReservation(false)}
+                handleInput={(name, value) => handleInput(name, value)}
+                chooseCar={(car) => handleInput('car', car)}
+                cars={cars}
+                car={data.car}
+                setData={(value) => changeData(value)}
+                bookTime={bookTime}
+                reservation={viewReservation}
+                />
+            {/* <ModalDeleteItem/> */}
         </div>
     )
 }
