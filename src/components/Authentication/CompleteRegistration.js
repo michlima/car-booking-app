@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import Input from './Input'
+import Input from '../Input'
 import { buttonCls } from '../classes'
 import { auth } from '../../backend/firebase'
 import { signOut} from "firebase/auth";
