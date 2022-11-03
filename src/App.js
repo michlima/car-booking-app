@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import Bookcar from './components/BookCar/Bookcar'; 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ShowCalendar from './components/Schedule/ShowCalendar';
@@ -13,14 +13,17 @@ import EmailConfirmation from './components/Authentication/EmailConfirmation';
 import AccountCreatedConfirmation from './components/Authentication/AccountCreatedConfirmation';
 import { getDocs, collection } from 'firebase/firestore';
 import { db } from './backend/firebase';
+import {GiCarWheel} from 'react-icons/gi'
 
 
 
 
 function App() {
+
   const [user] = useAuthState(auth)
   const init = React.useRef(true)
   const [schedule, setSchedule] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
   const getData = async () => {
     console.log('fetching schedule')
     let data = []
@@ -34,8 +37,34 @@ function App() {
     setSchedule(data)
     console.log(data)
   }
-  console.log(schedule)
+  const load = async () => {
+    await sleep(2000).then(() => {
+      setIsLoading(false)
+    })
+  }
+  useEffect(() => {
+    if(isLoading){
+      load()
+    }
+  },[])
 
+  if(isLoading){
+    return (
+      <div className='flex flex-col items-center justify-center w-screen h-screen'>
+        <div className='animate-bounce'>
+          <GiCarWheel className='animate-spin' size={100}/>
+        </div>
+      </div>
+    )
+  }
+
+  
+
+  function sleep (time) {
+    return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+  console.log(user)
   if(!user){
     return (
       <Router>
@@ -51,7 +80,7 @@ function App() {
     )
   }
 
-  console.log('initing')
+  
   if(init.current){
     getData()
     init.current = false
@@ -63,6 +92,7 @@ function App() {
     await bookTime(data)
     getData()
   }
+  console.log(user)
 
   return (
     <Router>
