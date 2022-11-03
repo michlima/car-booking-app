@@ -62,11 +62,11 @@ const Calendar = (props) => {
                     return <div key={index} className=' p-1 flex items-center justify-center'>{e}</div>
                 })}
                 {daysArray ? daysArray.map((e, index) => {
-                    let cls = ' p-1 border-b border-white hover:border-primary-2'
+                    let cls = ' p-1 border-b-2 border-white '
                     if(i == 5 || i == 6){
                         if(i == 6)
                             i = -1
-                        cls = 'text-gray-500 p-1 border-b border-white hover:border-primary-2'
+                        cls = 'text-gray-500 p-1 border-b-2 border-white'
                     }
                     
                     i+=1
@@ -74,7 +74,7 @@ const Calendar = (props) => {
                         return <div key={index}/>
                     }
                     if(e == selectedDate.day && date.month == selectedDate.month && date.year == selectedDate.year) {
-                        return <button  onClick={() => selectDate(e)} key={index} className=' p-1 border-b border-primary-2'>{e}</button> 
+                        return <button  onClick={() => selectDate(e)} key={index} className=' p-1 border-b-2 border-primary-2'>{e}</button> 
                     }
                     return <button  onClick={() => selectDate(e)} className={cls}>{e}</button>
                 })

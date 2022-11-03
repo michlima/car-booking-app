@@ -7,7 +7,7 @@ const modalClosed = 'duration-200 w-0 h-0 '
 const Modal = (props) => {
     let modalCls = props.isShowing ? modalOpen : modalClosed
     return(
-        <div className={modalCls} onScroll={() => console.log('dragging... ')}>
+        <div className={modalCls} onDrag={() => console.log('dragging... ')}>
                 { modalCls == modalClosed ?
                     <div/>
                     :
