@@ -6,6 +6,7 @@ import { auth } from '../../backend/firebase';
 import { signIn } from '../../backend/utils';
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import {FcGoogle} from 'react-icons/fc'
+import { registerData } from '../../backend/utils';
 
 import ywamPicture from '../pictures/ywam_bb.png'
 
@@ -24,7 +25,9 @@ const Authentication = (props) => {
             const credential = GoogleAuthProvider.credentialFromResult(result);
             const token = credential.accessToken;
             // The signed-in user info.
-            const user = result.user;
+            const user = result.user;            
+            console.log(user)
+            registerData(user.uid, user.email, user.displayName,'','??')
             // ...
         }).catch((error) => {
             // Handle Errors here.
@@ -60,7 +63,7 @@ const Authentication = (props) => {
             <div className='flex flex-row gap-4'>
                 <button className='text-white w-24 h-12 rounded-lg bg-primary-2 ' onClick={singIn}> Sign In </button>
                 <div className=' text-white w-24 h-12 rounded-lg bg-primary-2 flex items-center justify-center '>
-                    <Link  to='/authenticate-email'> Register </Link>
+                    <Link  to='/complete-registration'> Register </Link>
                 </div>
             </div>
             <a className='my-5'>OR</a>

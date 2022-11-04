@@ -29,6 +29,10 @@ const bookTime = async (data) => {
       }
 }
 
+const createUserInfo = () => {
+
+}
+
 const writeKms = async (data, id) => {
   try {
     await setDoc(doc(db, "kms", id), data)
@@ -79,6 +83,14 @@ const register = (email, userInfo) => {
   });
 }
 
+const registerGoodgleUser = (fName, lName, age) => {
+  const dataUid = {
+    firstName: fName,
+    lastName: lName,
+    age: age
+  }
+}
+
 const registerData = async (uid,email, fName, lName, age) => {
   const dataUid = {
     email: email,
@@ -86,8 +98,7 @@ const registerData = async (uid,email, fName, lName, age) => {
     lastName: lName,
     age: age,
   }
-
-
+  console.log(dataUid)
   try {
     await setDoc(doc(db, "users", uid), dataUid);
   } catch (e) {
@@ -99,4 +110,4 @@ const registerData = async (uid,email, fName, lName, age) => {
 
 
 
-export {bookTime, getReservations, writeKms, signIn, register}
+export {bookTime, getReservations, writeKms, signIn, register, registerData}
