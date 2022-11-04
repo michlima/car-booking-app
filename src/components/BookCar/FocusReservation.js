@@ -3,19 +3,19 @@ import { db } from '../../backend/firebase'
 import { getDoc, doc } from 'firebase/firestore'
 import {GoLocation} from 'react-icons/go'
 import {CgArrowsExchange} from 'react-icons/cg'
-import {BiTime, BiTimeFive} from 'react-icons/bi'
+import {BiTime} from 'react-icons/bi'
 import {GiPathDistance} from 'react-icons/gi'
-import {RiSendPlane2Fill} from 'react-icons/ri'
+import {RiSendPlane2Fill, RiCloseCircleLine} from 'react-icons/ri'
+import {MdOutlineArrowBackIos} from 'react-icons/md'
 import Input from '../Input'
 import { writeKms } from '../../backend/utils'
 
-const modalOpen = 'duration-200 overflow-auto pb-20 fixed bottom-0 w-screen h-screen translate-y-10 flex justify-enter items-center flex-col bg-opacity-75 backdrop-blur-lg bg-slate-300 rounded-t-[3rem] select-none'
+const modalOpen = 'duration-200 overflow-auto pb-20 fixed bottom-0 w-screen h-full flex justify-enter items-center flex-col bg-opacity-75 backdrop-blur-lg bg-slate-300 select-none'
 const modalClosed = 'duration-200 w-0 h-0 fixed bottom-0 right-0'
 
 
 const FocusReservation = (props) => {
     let modalCls = props.isShowing ? modalOpen : modalClosed
-    const [scrollPosition, setScrollPosition] = useState(0);
     const [kmsFetched, setKmsFetched] = useState({
         start: false,
         end: false
@@ -25,15 +25,7 @@ const FocusReservation = (props) => {
         end: ''
     })
 
-    const [fetched, setFetched] = useState()
-    
-
-    const slideModalOut = (position) => {
-        if(0 > window.pageYOffset){
-            props.closeModal()
-        }
-    }
-        
+            
     const getkms = async (id) => {
         const docRef = doc(db, "kms", id);
         const docSnap = await getDoc(docRef);
@@ -49,19 +41,6 @@ const FocusReservation = (props) => {
         }
         
     }, [props.reservation])
-
-    const handleScroll = () => {
-        slideModalOut(scrollPosition)
-        const position = window.pageYOffset;
-        setScrollPosition(position); 
-    };
-
-    useEffect(() => {
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-        };
-    }, []);
 
     const handleInput = (name, value) => {
         setFillKms(prevState => ({
@@ -84,12 +63,12 @@ const FocusReservation = (props) => {
 
     return(
         <div className={modalCls} >
-            <button className='absolute top-1 bg-white w-24 h-8 rounded-full mt-2 h-1 text-white '> </button>
+            <button onClick={props.closeModal} className='absolute flex items-center justify-center top-1 left-3 w-12 h-12 mt-2 text-white '><MdOutlineArrowBackIos size={20}/> </button>
             { modalCls == modalClosed ?
                 <div/>
                 :
                 <div className='w-screen '>
-                    <div className='w-screen bg-gray-800  rounded-t-[1rem] flex justify-enter items-center  pb-4 flex-col'>
+                    <div className='w-screen bg-gray-800   flex justify-enter items-center  pb-4 flex-col'>
                         <a className='text-2xl text-white mt-5'>{props.reservation.data.driver}</a>
                     </div>
                     <div className='bg-gray-800 w-11/12 rounded-lg m-3 text-white text-sm flex flex-row items-center justify-center'>

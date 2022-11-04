@@ -1,11 +1,10 @@
 import React,{useState, useEffect} from 'react'
-import {FaRegTimesCircle, FaCheck} from 'react-icons/fa'
 import {CgArrowsExchange} from 'react-icons/cg'
-import {BiDownArrow} from 'react-icons/bi'
+import {MdOutlineArrowBackIos} from 'react-icons/md'
+
 
 
 import Input from '../Input'
-import Dropdown from 'react-dropdown';
 const hours = ['12']
 const minutes = []
 for(let i = 0; i < 24;i++){
@@ -20,12 +19,11 @@ for(let i = 0; i < 12;i++){
 }
 
 
-const modalOpen = 'duration-200 overflow-auto pb-20 fixed bottom-0 w-screen h-screen translate-y-10 flex justify-enter items-center flex-col bg-opacity-75 backdrop-blur-lg bg-slate-300 rounded-t-[3rem] select-none'
+const modalOpen = 'duration-200 overflow-auto pb-20 fixed bottom-0 w-screen h-full flex justify-enter items-center flex-col bg-opacity-75 backdrop-blur-lg bg-slate-300 select-none'
 const modalClosed = 'duration-200 w-0 h-0 fixed bottom-0'
 
 const ModalBookCar = (props) => {
     let modalCls = props.isShowing ? modalOpen : modalClosed
-    const [scrollPosition, setScrollPosition] = useState(0);
     const [startSelect, setStartSelect] = useState(false)
     const [startMinute, setStartMinute] = useState(false)
     const [errorMessage, setErrorMessage] = useState([])
@@ -64,38 +62,23 @@ const ModalBookCar = (props) => {
         }
     }
 
-    const slideModalOut = (position) => {
-        if(0 > window.pageYOffset){
-            props.clearData()
-            props.closeModal()
-            setTime({
-                startHour: '00',
-                startMinute: '00',
-                endHour: '00',
-                endMinute: '00',
-            })
-            setStartSelect(false)
-            setStartMinute(false)
-            setEndSelect(false)
-            setEndMinute(false)
-        }
+    const closeModal = (position) => {
+        props.clearData()
+        props.closeModal()
+        setTime({
+            startHour: '00',
+            startMinute: '00',
+            endHour: '00',
+            endMinute: '00',
+        })
+        setStartSelect(false)
+        setStartMinute(false)
+        setEndSelect(false)
+        setEndMinute(false)
+        setErrorMessage([])
+
     }
-        
     
-
-    const handleScroll = () => {
-        slideModalOut(scrollPosition)
-        const position = window.pageYOffset;
-        setScrollPosition(position); 
-    };
-
-    useEffect(() => {
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-        };
-    }, []);
-
     const handleClockEnd = (name,hour) => {
         let value = hour
         if(!am && name == 'endHour'){
@@ -156,12 +139,12 @@ const ModalBookCar = (props) => {
 
     return(
         <div className={modalCls}>
+            <button onClick={closeModal} className='absolute flex items-center justify-center top-1 left-3 w-12 h-12 mt-2 text-white '><MdOutlineArrowBackIos size={20}/> </button>
             { modalCls == modalClosed ?
                 <div/>
                 :
                 <>
-                    <div className='w-screen bg-gray-800 rounded-t-[1rem] flex justify-enter items-center  pb-4 flex-col'>
-                        <button className='absolute top-1 bg-white w-24 h-8 rounded-full mt-2 h-1 text-white ' onClick={() => props.closeModal()}> </button>
+                    <div className='w-screen bg-gray-800 flex justify-enter items-center  pb-4 flex-col'>
                         <p className='text-2xl text-white mt-5'>Book Car</p>
                     </div>
                     {errorMessage.map((errors) => {
@@ -169,7 +152,7 @@ const ModalBookCar = (props) => {
                     })}
                     <div className='flex justify-center items-center w-screen p-4 flex-col'>
                         <div className='flex w-full justify-center flex-row translate-x-1'>
-                            <Input class={'bookCar'} label='destination' placeholder='destination'  handleInput={(name, value) => props.handleInput(name, value)}/>
+                            <Input class={'bookCar'} label='destination' placeholder='destination' handleInput={(name, value) => props.handleInput(name, value)}/>
                         </div>
                         <div className='flex w-full justify-center flex-row translate-x-1'>
                             <Input class={'bookCar'} label='driver' placeholder='driver'  handleInput={(name, value) => props.handleInput(name, value)}/>
