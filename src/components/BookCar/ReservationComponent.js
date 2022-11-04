@@ -7,8 +7,6 @@ const ReservationComponent = (props) => {
     const data = props.data
     let cls
 
-    console.log(props)
-
     if(schedule.month == data.month && schedule.day == data.day && schedule.year == data.year){
         switch (schedule.car) {
             case 'Blue Van':
@@ -23,7 +21,7 @@ const ReservationComponent = (props) => {
         }
     
     return(
-        <button onClick={() => props.showReservationData(true)} className={cls}>
+        <button onClick={() => props.showReservation()} className={cls}>
             <div className='bg-gray-800 w-full flex flex-col text-1xl rounded-t-lg p-2 items-center text-white'>
                 <span className='mr-2 text-1xl font-bold'>{schedule.driver}</span>
                 {`${schedule.startHour}:${schedule.startMinute} - ${schedule.endHour}:${schedule.endMinute}`}

@@ -71,6 +71,7 @@ const Bookcar = (props) => {
     }
 
     const showReservationData = (object) => {
+        console.log(object)
         setViewReservation(object)
         setShowReservation(true)
     }
@@ -110,7 +111,7 @@ const Bookcar = (props) => {
                             <ReservationComponent 
                                 schedule={object.data} 
                                 data={data}
-                                showReservation={() => setShowReservation(true)}/>
+                                showReservation={() => showReservationData(object)}/>
                         )
                     })}
                     
