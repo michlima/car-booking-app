@@ -1,4 +1,4 @@
-import { collection, query, where,doc, setDoc ,getDocs, addDoc } from "firebase/firestore"; 
+import { collection, query, where,doc, setDoc ,getDocs, addDoc, updateDoc } from "firebase/firestore"; 
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
 import { createUserWithEmailAndPassword, signOut} from "firebase/auth";
@@ -91,6 +91,13 @@ const registerGoodgleUser = (fName, lName, age) => {
   }
 }
 
+const editTime = async (id, name, value) => {
+  const schedule = doc(db, 'schedule', id)
+  await updateDoc(schedule, {
+    [name]: value,
+  });
+}
+
 const registerData = async (uid,email, fName, lName, age) => {
   const dataUid = {
     email: email,
@@ -110,4 +117,4 @@ const registerData = async (uid,email, fName, lName, age) => {
 
 
 
-export {bookTime, getReservations, writeKms, signIn, register, registerData}
+export {bookTime, getReservations, writeKms, signIn, register, registerData, editTime}
