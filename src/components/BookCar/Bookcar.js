@@ -2,32 +2,37 @@ import React, { useRef, useState } from 'react'
 import Calendar from './Calendar'
 import ModalBookCar from './ModalBookCar'
 import FocusReservation from './FocusReservation'
+import { Link } from 'react-router-dom'
 import ReservationComponent from './ReservationComponent'
+import { AiFillPropertySafety } from 'react-icons/ai'
 
 const cars = [
     'Blue Van',
     'SOH',
     'Truck'
 ]
-const Bookcar = (props) => {
-    const [showModal, setShowModal] = useState(false)
-    const [showReservation, setShowReservation] = useState(false)
-    const [viewReservation, setViewReservation] = useState()
-    const [errorMessage, setErrorMessage] = useState('')
-    const month = useRef(new Date().getMonth())
-    const year = useRef(new Date().getFullYear())
+
+//returns next 12 months after current month
+const getMonths = () => {
+    let month = new Date().getMonth()
+    let year = new Date().getFullYear()
     let nextMonths = []
     for(let i = 0; i < 12; i++){
-        nextMonths.push({month: month.current, year: year.current})
-        if(month.current < 11){
-            month.current+=1
+        nextMonths.push({month: month, year: year})
+        if(month < 11){
+            month+=1
         } else{
-            month.current = 0
-            year.current +=1
+            month = 0
+            year +=1
         }
     }
-    const [months, setMonths] = useState(nextMonths)
-    const [data, setData] = useState({
+    return nextMonths
+}
+const Bookcar = (props) => {
+    const [months, setState] = useState(getMonths())
+    const [showForm, setBookForm] = useState(false)
+    const [errorMessages, setErrorMessages] = useState('')
+    const [form, setFormData] = useState({
         id: props.userid, 
         driver: null,
         day: null,
@@ -42,42 +47,39 @@ const Bookcar = (props) => {
         car: null
     })
 
-    const changeData = (value) => {
-        setErrorMessage('')
+    const changeFormData = (value) => {
+        setErrorMessages('')
         value.map((e) => {
-            setData(prevState => ({
+            setFormData(prevState => ({
                 ...prevState,
                 [e.name]: e.value
             }))
         })
+        console.log(form)
     }
 
     const handleInput = (name, value) => {
-        setData(prevState => ({
+        setFormData(prevState => ({
             ...prevState,
             [name]: value
         }))
     }
-    const openModal = () => {
-        if(data.day != null){
-            setShowModal(true)
+    const openBookCarModal = () => {
+        if(form.day != null){
+            setBookForm(true)
         } else {
-            setErrorMessage('*please choose date of booking first*')
+            setErrorMessages('*please choose date of booking first*')
         }
     }
 
+    //call to backend
     const bookTime = () => { 
-        props.bookTimeF(data)
+        props.bookTimeF(form)
     }
 
-    const showReservationData = (object) => {
-        console.log(object)
-        setViewReservation(object)
-        setShowReservation(true)
-    }
 
-    const clearData = () => {
-        setData ( prevState => ({
+    const clearForm = () => {
+        setFormData ( prevState => ({
             ... prevState,
             'driver': null,
             'startHour': '00',
@@ -94,12 +96,12 @@ const Bookcar = (props) => {
     
     return(
         <div className='flex items-center bg-white flex-col w-screen p-2 pb-20 pt-28'>
-            <p className='text-red-600'>{errorMessage}</p>
+            <p className='text-red-600'>{errorMessages}</p>
             <div className='flex items-center w-screen bg-white snap-x scroll-smooth p-2 gap-5 overflow-auto scrollbar snap-mandatory'>
                 {months.map((e,index) => {
                     return(
                         <div className=' snap-center'>
-                            <Calendar month={e.month} year={e.year} setDate={(value) => changeData(value)}/>
+                            <Calendar month={e.month} year={e.year} setDate={(value) => changeFormData(value)}/>
                         </div>
                     )
                 })}
@@ -110,8 +112,9 @@ const Bookcar = (props) => {
                         return(
                             <ReservationComponent 
                                 schedule={object.data} 
-                                data={data}
-                                showReservation={() => showReservationData(object)}/>
+                                object={object}
+                                userid={props.userid}
+                                data={form}/>
                         )
                     })}
                     
@@ -119,30 +122,18 @@ const Bookcar = (props) => {
                 :
                 <div/>
             }
-            <button onClick={() => openModal()} className='text-white fixed right-10 bottom-10 p-3 shadow-lg bg-primary-2 rounded-full'>
+            <button onClick={() => openBookCarModal()} className='text-white fixed right-10 bottom-10 p-3 shadow-lg bg-primary-2 rounded-full'>
                 <a>Book Car</a>
             </button>
             <ModalBookCar
-                isShowing={showModal}
-                closeModal={() => setShowModal(false)}
+                isShowing={showForm}
+                closeModal={() => setBookForm(false)}
                 handleInput={(name, value) => handleInput(name, value)}
                 chooseCar={(car) => handleInput('car', car)}
                 cars={cars}
-                data={data}
-                setData={(value) => changeData(value)}
+                formData={form}
                 bookTime={bookTime}
-                clearData={clearData}
-                />
-            <FocusReservation
-                isShowing={showReservation}
-                closeModal={() => setShowReservation(false)}
-                handleInput={(name, value) => handleInput(name, value)}
-                chooseCar={(car) => handleInput('car', car)}
-                cars={cars}
-                car={data.car}
-                setData={(value) => changeData(value)}
-                bookTime={bookTime}
-                reservation={viewReservation}
+                clearForm={clearForm}
                 />
             {/* <ModalDeleteItem/> */}
         </div>
