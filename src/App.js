@@ -1,24 +1,33 @@
 import React, {useState, useEffect} from 'react';
 import Bookcar from './components/BookCar/Bookcar'; 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import ShowCalendar from './components/Schedule/ShowCalendar';
 import {useAuthState} from 'react-firebase-hooks/auth'
-import { auth } from './backend/firebase';
-import { bookTime } from './backend/utils'
+import { auth, db } from './backend/firebase';
+import { bookTime } from './backend/utils';
 import Navigation from './components/Navigations';
 import Authentication from './components/Authentication/Authentication';
-import EmailAthentication from './components/Authentication/EmailAthentication';
 import CompleteRegistration from './components/Authentication/CompleteRegistration';
-import EmailConfirmation from './components/Authentication/EmailConfirmation';
-import AccountCreatedConfirmation from './components/Authentication/AccountCreatedConfirmation';
 import { getDocs, collection } from 'firebase/firestore';
-import { db } from './backend/firebase';
 import {GiCarWheel} from 'react-icons/gi'
+import FocusReservation from './components/BookCar/FocusReservation';
 
 
 
 
 function App() {
+
+  const [reservationData, setReservationData] = useState({
+    id: null,
+    data : {
+        driver: null,
+        reason: null,
+        destination: null,
+        startHour: null,
+        startMinute: null,
+        endHour: null,
+        endMinute: null
+    }
+})
 
   const [user] = useAuthState(auth)
   const init = React.useRef(true)
@@ -37,11 +46,13 @@ function App() {
     setSchedule(data)
     console.log(data)
   }
+
   const load = async () => {
     await sleep(2000).then(() => {
       setIsLoading(false)
     })
   }
+  
   useEffect(() => {
     if(isLoading){
       load()
@@ -70,11 +81,7 @@ function App() {
       <Router>
         <Routes>
           <Route path='/'                             element={<Authentication />}/>
-          <Route path='/authenticate-email'           element={<EmailAthentication/>}/>
-          <Route path='/email-sent-confirmation'      element={<EmailConfirmation/>}/>
           <Route path='/complete-registration'        element={<CompleteRegistration/>}/>
-          <Route path='/registration-completed'       element={<Authentication/>}/>
-          <Route path='/account-created-confirmation' element={<AccountCreatedConfirmation/>}/>
         </Routes>
       </Router>
     )
@@ -94,12 +101,14 @@ function App() {
   }
   console.log(user)
 
+
+
   return (
     <Router>
       <Navigation/>
       <Routes>
         <Route path='/' element={<Bookcar schedule={schedule} userid={user.uid} bookTimeF={(data) => bookTimeF(data)}/>}/>
-        <Route path='/calendar' element ={<ShowCalendar schedule={schedule}/>}/>
+        <Route path='focus-reservation'             element={<FocusReservation getData={getData} reservation={reservationData}/>}/>
       </Routes>
       <button onClick={() => console.log(schedule)}></button>
     </Router>
