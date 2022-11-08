@@ -1,4 +1,4 @@
-import { collection, query, where,doc, setDoc ,getDocs, addDoc, updateDoc } from "firebase/firestore"; 
+import { collection, query, where,doc, setDoc ,getDocs, addDoc, updateDoc, deleteDoc } from "firebase/firestore"; 
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
 import { createUserWithEmailAndPassword, signOut} from "firebase/auth";
@@ -10,7 +10,7 @@ import { db } from "./firebase";
 const bookTime = async (data) => {
     try {
         const docRef = await addDoc(collection(db, 'schedule',), {
-          reservationId : data.id,
+          reservedBy    : data.id,
           driver        : data.driver,
           destination   : data.destination,
           reason        : data.reason,
@@ -98,6 +98,10 @@ const editTime = async (id, name, value) => {
   });
 }
 
+const deleteBooking = async (id) => {
+  await deleteDoc(doc(db, "schedule", id));
+}
+
 const registerData = async (uid,email, fName, lName, age) => {
   const dataUid = {
     email: email,
@@ -117,4 +121,4 @@ const registerData = async (uid,email, fName, lName, age) => {
 
 
 
-export {bookTime, getReservations, writeKms, signIn, register, registerData, editTime}
+export {bookTime, getReservations, writeKms, signIn, register, registerData, editTime, deleteBooking}

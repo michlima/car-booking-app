@@ -15,24 +15,11 @@ import FocusReservation from './components/BookCar/FocusReservation';
 
 
 function App() {
-
-  const [reservationData, setReservationData] = useState({
-    id: null,
-    data : {
-        driver: null,
-        reason: null,
-        destination: null,
-        startHour: null,
-        startMinute: null,
-        endHour: null,
-        endMinute: null
-    }
-})
-
   const [user] = useAuthState(auth)
   const init = React.useRef(true)
   const [schedule, setSchedule] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+
   const getData = async () => {
     console.log('fetching schedule')
     let data = []
@@ -56,6 +43,9 @@ function App() {
   useEffect(() => {
     if(isLoading){
       load()
+      window.localStorage.setItem('day',-1)
+      window.localStorage.setItem('month',-1)
+      window.localStorage.setItem('year',-1)
     }
   },[])
 
@@ -69,11 +59,9 @@ function App() {
     )
   }
 
-  
-
   function sleep (time) {
     return new Promise((resolve) => setTimeout(resolve, time));
-}
+  }
 
   console.log(user)
   if(!user){
@@ -101,6 +89,22 @@ function App() {
   }
   console.log(user)
 
+  const removeFromSchedule = (id) => {
+    let arr = schedule
+    let index
+    console.log(id)
+    for(let i = 0; i < schedule.length; i++){
+      if (schedule[i].id == id){
+        index = i
+        console.log(i)
+        break
+      }
+        
+    }
+    arr.splice(index,1)
+    setSchedule(arr)
+  }
+
 
 
   return (
@@ -108,9 +112,11 @@ function App() {
       <Navigation/>
       <Routes>
         <Route path='/' element={<Bookcar schedule={schedule} userid={user.uid} bookTimeF={(data) => bookTimeF(data)}/>}/>
-        <Route path='focus-reservation'             element={<FocusReservation getData={getData} reservation={reservationData}/>}/>
+        <Route path='focus-reservation'             element={<FocusReservation userid={user.uid} getData={getData} removeFromSchedule={(id) => removeFromSchedule(id)} />}/>
       </Routes>
       <button onClick={() => console.log(schedule)}></button>
+
+      <a className='text-[0.7rem] text-gray-400 w-screen flex justify-center font-italix'>beta version- 2.0.1</a>
     </Router>
   );
 }
