@@ -35,9 +35,9 @@ const Bookcar = (props) => {
     const [form, setFormData] = useState({
         id: props.userid, 
         driver: null,
-        day: null,
-        month: null,
-        year: '2022',
+        day: window.localStorage.getItem('day'),
+        month: window.localStorage.getItem('month'),
+        year: window.localStorage.getItem('year'),
         startHour: '00',
         startMinute: '00',
         endHour: '00',

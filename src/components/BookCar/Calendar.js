@@ -17,11 +17,12 @@ const Calendar = (props) => {
         month: getMonth(props.month),
         year: props.year,
     })
+    const sd = window.localStorage.getItem('day')
 
     const [selectedDate, setSelectedDate] = useState({
-        day: -1,
-        month: -1,
-        year: -1,
+        day: window.localStorage.getItem('day'),
+        month: window.localStorage.getItem('month'),
+        year: window.localStorage.getItem('year'),
     })
 
     useEffect(() => {
@@ -41,8 +42,12 @@ const Calendar = (props) => {
             {name: 'month', value: date.month},
             {name: 'year', value: date.year},]
         props.setDate(newDate)
+        if(day && date.month && date.year){
+            window.localStorage.setItem('day',day)
+            window.localStorage.setItem('month',date.month)
+            window.localStorage.setItem('year',date.year)
+        }
     }
-
 
 
     let i = 0
@@ -50,9 +55,9 @@ const Calendar = (props) => {
     return (
         <div className=' text-black flex  flex-col w-screen px-5 items-center h-96 rounded-tr-[2rem]'>
             <div className='mb-2 w-full flex flex-col items-center'>
-                    <a className='flex justify-center text-2xl text-black mx-max w-4/6'>
-                        {date.month}
-                    </a>
+                <a className='flex justify-center text-2xl text-black mx-max w-4/6'>
+                    {date.month}
+                </a>
                 <a className=''>
                     {date.year}
                 </a> 
@@ -85,6 +90,7 @@ const Calendar = (props) => {
     )
 }
 
+// Fabricates days to fit in calendar
 const makeDays = (days, dayOW) => {{
     let daysArr = []
     for(let i = 0; i < dayOW; i++){
