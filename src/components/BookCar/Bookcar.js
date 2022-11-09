@@ -1,8 +1,6 @@
 import React, { useRef, useState } from 'react'
 import Calendar from './Calendar'
 import ModalBookCar from './ModalBookCar'
-import FocusReservation from './FocusReservation'
-import { Link } from 'react-router-dom'
 import ReservationComponent from './ReservationComponent'
 import { AiFillPropertySafety } from 'react-icons/ai'
 
@@ -37,6 +35,7 @@ const Bookcar = (props) => {
         reserverName: username,
         id: props.userid, 
         driver: null,
+        personalTrip: false,
         day: window.localStorage.getItem('day'),
         month: window.localStorage.getItem('month'),
         year: window.localStorage.getItem('year'),
@@ -117,7 +116,8 @@ const Bookcar = (props) => {
                                 object={object}
                                 userid={props.userid}
                                 userInfo={props.userInfo}
-                                data={form}/>
+                                data={form}
+                                onReturn='/'/>
                         )
                     })}
                     

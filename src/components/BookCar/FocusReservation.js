@@ -38,6 +38,7 @@ const FocusReservation = (props) => {
     const reservationId = location.state.reservationData.id
     const reservedBy = location.state.reservationData.data.reservationId ? location.state.reservationData.data.reservationId :  location.state.reservationData.data.reserverID
     const data = location.state.reservationData.data
+   
     
     const [kmsFetched, setKmsFetched] = useState({
         start: 'loading',
@@ -215,13 +216,14 @@ const FocusReservation = (props) => {
 
     const refreshData = () => {
         props.getData()
-        navigate('/')
+        navigate(location.state.onReturn)
     }
 
     const deleteItem = async () => {
         props.removeFromSchedule(reservationId)
+        props.getData()
         await deleteBooking(reservationId)
-        navigate('/')
+        navigate(location.state.onReturn)
         
     }
 
@@ -388,11 +390,17 @@ const FocusReservation = (props) => {
                         
                     </div>
                 </div>
-                {canEdit
+                {canEdit && !kmsFetched.start && !kmsFetched.end
                 ?
                     <button onClick={deleteItem} className='duration-200 bg-white hover:bg-red-500 hover:text-white hover:scale-125 px-6 py-2 text-2xl rounded-lg '  >Delete</button>
                 :
                     <></>
+                }
+                {kmsFetched.start && kmsFetched.end
+                ?
+                <button onClick={() => navigate(location.state.onReturn)} className='duration-200 bg-white hover:bg-green-500 hover:text-white hover:scale-125 px-6 py-2 text-2xl rounded-lg '  >Go Back</button>
+                :
+                <></>
                 }
         </div>
     )
