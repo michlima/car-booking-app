@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import {FaCarAlt, FaSignOutAlt} from 'react-icons/fa'
 import {BsFillCalendar2DayFill} from 'react-icons/bs'
+import {BiTrip} from 'react-icons/bi'
 import { auth } from '../backend/firebase'
 
 
@@ -15,9 +16,12 @@ const Navigation = (props) => {
     
 
     return(
-        <div className='fixed top-0 duration-200 w-full flex items-center justify-center h-12 mb-10 bg-gray-800'>
+        <div className='fixed  top-0 duration-200 w-full flex items-center justify-center h-12 mb-10 bg-gray-800'>
             <Link to='/' className={buttoncls} >
                 <FaCarAlt size={30}/>
+            </Link>
+            <Link to='my-reservations' className={buttoncls}>
+                <BiTrip size={30} myReservastions={props.myReservations}/>
             </Link>
             <button className={buttoncls}   onClick={signOut}><FaSignOutAlt size={30}/></button>
         </div>
