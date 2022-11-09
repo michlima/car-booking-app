@@ -34,10 +34,9 @@ for(let i = 0; i < 24;i++){
 const FocusReservation = (props) => {
     const navigate = useNavigate()
     const location = useLocation()
-    const [loading, setLoading] = useState(true)
     
     const reservationId = location.state.reservationData.id
-    const reservedBy = location.state.reservationData.data.reservationId ? location.state.reservationData.data.reservationId :  location.state.reservationData.data.reservedBy
+    const reservedBy = location.state.reservationData.data.reservationId ? location.state.reservationData.data.reservationId :  location.state.reservationData.data.reserverID
     const data = location.state.reservationData.data
     
     const [kmsFetched, setKmsFetched] = useState({
@@ -50,7 +49,6 @@ const FocusReservation = (props) => {
     })
     
     const canEdit = (props.userid == reservedBy)
-
     const [editting, setEditing] = useState({
         kmsStart: false,
         kmsEnd: false,
@@ -121,10 +119,8 @@ const FocusReservation = (props) => {
     const handleClockEnd = (name,hour) => {
         let value = hour
         if(name == 'endHour'){
-            console.log('oops')
             setSelectingHour(false)
             if(Number(hour) < Number(time.startHour)){
-                console.log('oops')
                 value = Number(value) + 12
             }
         } else {
@@ -257,6 +253,7 @@ const FocusReservation = (props) => {
                 <div className='w-screen '>
                     <div className='w-screen bg-gray-800   flex justify-enter items-center  pb-4 flex-col'>
                         <a className='text-2xl text-white mt-5'>{data.driver}</a>
+                        <a className='text-sm text-white mt-5'>reserved by: {data.reserverName}</a>
                     </div>
                     <div className='bg-gray-800 w-11/12 rounded-lg m-3 text-white text-sm flex flex-row items-center justify-center'>
                         <div className='flex flex-col items-center justify-center'>
@@ -270,6 +267,7 @@ const FocusReservation = (props) => {
                     <div className='bg-gray-800 p-5 w-11/12 rounded-lg m-3 text-white flex flex-col items-center justify-center'>
                         <a className='m-2 flex flex-col items-center'>
                             Reason:<span className=' font-bold'>{data.reason}</span>
+                            {data.personalTrip ? <a className='text-sm text-primary-2 italic' >personal</a> : <></>}
                         </a>
                         <div className='flex flex-row items-center justify-center'>
                             <div className='flex flex-col items-center justify-center'>
@@ -360,25 +358,34 @@ const FocusReservation = (props) => {
                             </div>
                         </div>
                         <GiPathDistance className='m-2' size={40}/>
-                        {!kmsFetched.start ||  editting.kmsStart
+                        {canEdit
                         ?
-                            <div className='flex flex-row w-full items-center justify-center'>
-                                <Input label='inputTimeStart' placeholder='start kms...'  handleInput={(name, value) => handleInput(name, value)}/>
-                                <button  onClick={() => confirmKms('start', fillKms.start)}className='flex -translate-y-2 ml-2'><RiSendPlane2Fill size={30}/></button>
-                            </div>
-                        :
-                            <></>
+                            <>
+                                {!kmsFetched.start ||  editting.kmsStart 
+                                    ?
+                                        <div className='flex flex-row w-full items-center justify-center'>
+                                            <Input label='start' placeholder='start kms...'  handleInput={(name, value) => handleInput(name, value)}/>
+                                            <button  onClick={() => confirmKms('start', fillKms.start)}className='flex -translate-y-2 ml-2'><RiSendPlane2Fill size={30}/></button>
+                                        </div>
+                                    :
+                                        <></>
+                                        
+                                }
                             
-                        }
-                        {!kmsFetched.end || editting.kmsEnd
-                        ?
-                            <div className='flex flex-row w-full items-center justify-center'>
-                                <Input label='end' placeholder='end kms...'  handleInput={(name, value) => handleInput(name, value)}/>
-                                <button onClick={() => confirmKms('end', fillKms.end)} className=' flex -translate-y-2 ml-2'><RiSendPlane2Fill size={30}/></button>
-                            </div>
+                                {!kmsFetched.end || editting.kmsEnd 
+                                ?
+                                    <div className='flex flex-row w-full items-center justify-center'>
+                                        <Input label='end' placeholder='end kms...'  handleInput={(name, value) => handleInput(name, value)}/>
+                                        <button onClick={() => confirmKms('end', fillKms.end)} className=' flex -translate-y-2 ml-2'><RiSendPlane2Fill size={30}/></button>
+                                    </div>
+                                :
+                                    <></>
+                                }
+                            </>
                         :
                             <></>
                         }
+                        
                     </div>
                 </div>
                 {canEdit
