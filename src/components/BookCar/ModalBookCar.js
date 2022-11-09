@@ -1,4 +1,4 @@
-import React,{useState, useEffect} from 'react'
+import React,{useState, useEffect, useRef} from 'react'
 import {CgArrowsExchange} from 'react-icons/cg'
 import {MdOutlineArrowBackIos} from 'react-icons/md'
 import Clock from './Clock'
@@ -6,6 +6,7 @@ import Clock from './Clock'
 
 
 import Input from '../Input'
+import { useForkRef } from '@mui/material'
 
 const hours = ['12']
 for(let i = 0; i < 24;i++){
@@ -27,6 +28,8 @@ const ModalBookCar = (props) => {
     const [endSelect, setEndSelect] = useState(false)
     const [selectingHour, setSelectingHour] = useState(true)
     const [errorMessage, setErrorMessage] = useState([])
+    const [personalTrip, setPersoanlTrip] = useState(false)
+    const keepReason = useRef('')
     const [am, setIsAm] = useState(true)
     const [time, setTime] = useState({
         startHour: '00',
@@ -155,6 +158,12 @@ const ModalBookCar = (props) => {
         }
     }
 
+    const handleInput = () => {
+        props.handleInput('personalTrip',!personalTrip)
+        setPersoanlTrip(!personalTrip)
+        
+    }
+
 
     return(
         <div className={modalCls}>
@@ -178,7 +187,10 @@ const ModalBookCar = (props) => {
                         </div>
                         <div className='flex w-full justify-center flex-row translate-x-1'>
                             <Input class={'bookCar'} label='reason' placeholder='reason for trip'  handleInput={(name, value) => props.handleInput(name, value)}/>
-                        </div>                            
+                        </div>
+                        <button onClick={() => handleInput()} className={!personalTrip ? 'duration-200 px-4 py-2 bg-white rounded-lg' : 'duration-200 px-4 py-2 bg-primary-2 rounded-lg shadow-lg' }>
+                            personal
+                        </button>  
                     </div>  
                     <div className='flex w-screen'>
                         {props.cars.map((e) => {
@@ -235,7 +247,7 @@ const ModalBookCar = (props) => {
                     </div>
                 </>
             }
-            <button onClick={submitData} className='bg-white shadow-lg  text-primary-2 p-3 rounded-lg mt-20'>Book Time</button>
+            <button onClick={submitData} className='bg-white shadow-lg  text-primary-2 p-3 rounded-lg mt-20'>Book Time</button>            
         </div>
     )
 } 

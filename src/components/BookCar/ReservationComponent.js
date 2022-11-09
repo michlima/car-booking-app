@@ -22,9 +22,10 @@ const ReservationComponent = (props) => {
         }
     
     return(
-        <Link to='/focus-reservation' state={{ userid: props.userid, reservationData: props.object}} className={cls}>
+        <Link to='/focus-reservation' state={{ reservationData: props.object, userInfo: props.userInfo}} className={cls}>
             <div className='bg-gray-800 w-full flex flex-col text-1xl rounded-t-lg p-2 items-center text-white'>
-                <span className='mr-2 text-1xl font-bold'>{schedule.driver}</span>
+                <a className='mr-2 text-1xl font-bold'>{schedule.driver}</a>
+                {/* <a className='mr-2 text-sm font-bold'>driver: {schedule.driver}</a> */}
                 {`${schedule.startHour}:${schedule.startMinute} - ${schedule.endHour}:${schedule.endMinute}`}
             </div> 
             <p className=' mx-2 mt-1 flex items-center font-semibold'><GoLocation className='m-2'/>{schedule.destination}</p>
