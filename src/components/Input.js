@@ -17,18 +17,14 @@ const Input = (props) => {
     const handleChange = e => {
         const { value } = e.target;
         let validNumber = false
-        console.log(props.label)
         if(props.label === 'age'){
-            console.log(value)
             let lastInput = value.charAt(value.length - 1)
-            console.log(lastInput)
             for(let i = 0; i < 10; i++) {
                 if(lastInput == i){
                     validNumber = true
                     break;
                 }
             }
-            console.log(value.length)
 
             if(value < 110){
                 errors.current[1] = false

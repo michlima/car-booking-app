@@ -22,7 +22,6 @@ const EmailAthentication = () => {
             ...prevState,
             [name]: value
         }))
-        console.log(credentials)
     }
 
     const actionCodeSettings = {

@@ -35,7 +35,6 @@ const CompleteRegistration = () => {
             [name]: value
         }))
         
-        console.log(userInfo)
         
     }
 
@@ -52,7 +51,6 @@ const CompleteRegistration = () => {
             const token = credential.accessToken;
             // The signed-in user info.
             const user = result.user;
-            console.log(user)
             registerData(user.uid, user.email, user.displayName,'','??')
             // ...
         }).catch((error) => {

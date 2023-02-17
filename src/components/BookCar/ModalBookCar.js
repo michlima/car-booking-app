@@ -1,6 +1,8 @@
 import React,{useState, useEffect, useRef} from 'react'
 import {CgArrowsExchange} from 'react-icons/cg'
 import {MdOutlineArrowBackIos} from 'react-icons/md'
+import { doc,getDoc } from 'firebase/firestore'
+import { db } from '../../backend/firebase'
 import Clock from './Clock'
 
 
@@ -29,7 +31,6 @@ const ModalBookCar = (props) => {
     const [selectingHour, setSelectingHour] = useState(true)
     const [errorMessage, setErrorMessage] = useState([])
     const [personalTrip, setPersoanlTrip] = useState(false)
-    const keepReason = useRef('')
     const [am, setIsAm] = useState(true)
     const [time, setTime] = useState({
         startHour: '00',
@@ -81,17 +82,14 @@ const ModalBookCar = (props) => {
     const handleClockEnd = (name,hour) => {
         let value = hour
         if(name == 'endHour'){
-            console.log('oops')
             setSelectingHour(false)
             if(Number(hour) < Number(time.startHour)){
-                console.log('oops')
                 value = Number(value) + 12
             }
         } else {
             setEndSelect(false)
             setSelectingHour(true)
         }
-        console.log(value)
         
         if(!am && name == 'endHour'){
             if(value == 12){
@@ -161,8 +159,22 @@ const ModalBookCar = (props) => {
     const handleInput = () => {
         props.handleInput('personalTrip',!personalTrip)
         setPersoanlTrip(!personalTrip)
-        
     }
+
+    const handleAdminReservation = async (name, value) => {
+        props.handleInput(name, value)
+
+        const docRef = doc(db, "users", value);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          props.handleInput('reserverName', docSnap.data().firstName)
+        } else {
+          // doc.data() will be undefined in this case
+          console.log("No such document!");
+      }
+
+    }
+
 
 
     return(
@@ -188,6 +200,12 @@ const ModalBookCar = (props) => {
                         <div className='flex w-full justify-center flex-row translate-x-1'>
                             <Input class={'bookCar'} label='reason' placeholder='reason for trip'  handleInput={(name, value) => props.handleInput(name, value)}/>
                         </div>
+                        {props.userInfo.admin
+                        ?
+                            <Input class={'bookCar'} label='reserverName' placeholder='user ID'  handleInput={(name, value) => handleAdminReservation(name,value)}/>
+                        :
+                            <></>
+                        }
                         <button onClick={() => handleInput()} className={!personalTrip ? 'duration-200 px-4 py-2 bg-white rounded-lg' : 'duration-200 px-4 py-2 bg-primary-2 rounded-lg shadow-lg' }>
                             personal
                         </button>  
@@ -218,7 +236,6 @@ const ModalBookCar = (props) => {
                             <CgArrowsExchange className='text-white mx-10' size={40}/>
 
                             <button onClick={() => {
-                                console.log(endSelect)
                                 if(endSelect){
                                     setEndSelect(false)
                                 }else{

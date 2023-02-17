@@ -26,7 +26,6 @@ const Authentication = (props) => {
             const token = credential.accessToken;
             // The signed-in user info.
             const user = result.user;            
-            console.log(user)
             registerData(user.uid, user.email, user.displayName,'','??')
             // ...
         }).catch((error) => {
@@ -47,7 +46,6 @@ const Authentication = (props) => {
             ...prevState,
             [name]: value
         }))
-        console.log(credentials)
     }
 
     const singIn = () => {

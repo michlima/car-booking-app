@@ -11,6 +11,7 @@ const bookTime = async (data) => {
   console.log(data)
     try {
         const docRef = await addDoc(collection(db, 'schedule',), {
+          paid          : !data.personalTrip,
           reserverID    : data.id,
           reserverName  : data.reserverName,
           driver        : data.driver,
@@ -38,9 +39,33 @@ const createUserInfo = () => {
 
 const writeKms = async (data, id) => {
   console.log(data)
-  console.log('writing data')
+  console.log('writing kms')
   try {
     await setDoc(doc(db, "kms", id), data)
+    
+  } catch (e) {
+    console.error("Error adding document: ", e);
+  }
+}
+
+
+const writePayments = async (id, kms, car) => {
+  console.log(kms)
+  let pay 
+  if(car == 'Truck') {
+    pay = ((kms.end - kms.start) * 0.50).toFixed(2)
+  } else {
+    pay = ((kms.end - kms.start) * 0.30).toFixed(2)
+  }
+  const washingtonRef = doc(db, "kms", id);
+  console.log(kms)
+  console.log(id)
+  
+  console.log('writing payment')
+  try {
+    await updateDoc(washingtonRef, {
+      price: pay
+    });
     
   } catch (e) {
     console.error("Error adding document: ", e);
@@ -105,12 +130,17 @@ const editTime = async (id, name, value) => {
 
 const deleteBooking = async (id) => {
   await deleteDoc(doc(db, "schedule", id));
+  await deleteDoc(doc(db, "kms", id));
 }
 
-const getUserInfo = async (id) => {
-  console.log('getting user info')
-
+const payTrip = async (id) => {
+  console.log(id)
+  const schedule = doc(db, 'schedule', id)
+  await updateDoc(schedule,{
+    'paid': true
+  })
 }
+
 const registerData = async (uid,email, fName, lName, age) => {
   const dataUid = {
     email: email,
@@ -118,16 +148,31 @@ const registerData = async (uid,email, fName, lName, age) => {
     lastName: lName,
     age: age,
   }
-  console.log(dataUid)
-  try {
-    await setDoc(doc(db, "users", uid), dataUid);
-  } catch (e) {
-    console.error("Error adding document: ", e);
-    return false
+  const querySnapshot = await getDocs(collection(db, "users"));
+  let newUser = true
+  querySnapshot.forEach((doc) => {
+    // doc.data() is never undefined for query doc snapshots
+    if(doc.id == uid){
+      newUser = false
+      console.log(doc.id)
+    console.log(uid)
+    }
+    
+  });
+  if(newUser){
+    console.log('newUser')
+    try {
+      await setDoc(doc(db, "users", uid), dataUid);
+    } catch (e) {
+      console.error("Error adding document: ", e);
+      return false
+    }
+    return true
   }
-  return true
+  return false
 }
 
+const costPerKM = 0.30
 
 
-export {bookTime, getReservations, writeKms, signIn, register, registerData, editTime, deleteBooking, getUserInfo}
+export {bookTime, getReservations, writeKms, signIn, register, registerData, editTime, deleteBooking, payTrip, costPerKM, writePayments}

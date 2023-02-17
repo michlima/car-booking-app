@@ -56,7 +56,6 @@ const Bookcar = (props) => {
                 [e.name]: e.value
             }))
         })
-        console.log(form)
     }
 
     const handleInput = (name, value) => {
@@ -66,7 +65,7 @@ const Bookcar = (props) => {
         }))
     }
     const openBookCarModal = () => {
-        if(form.day != null){
+        if(form.day != -1){
             setBookForm(true)
         } else {
             setErrorMessages('*please choose date of booking first*')
@@ -96,7 +95,7 @@ const Bookcar = (props) => {
 
     
     return(
-        <div className='flex items-center bg-white flex-col w-screen p-2 pb-20 pt-28'>
+        <div className='flex items-center bg-white flex-col w-screen p-2 pb-20 pt-28 select-none'>
             <p className='text-red-600'>{errorMessages}</p>
             <div className='flex items-center w-screen bg-white snap-x scroll-smooth p-2 gap-5 overflow-auto scrollbar snap-mandatory'>
                 {months.map((e,index) => {
@@ -129,6 +128,7 @@ const Bookcar = (props) => {
                 <a>Book Car</a>
             </button>
             <ModalBookCar
+                userInfo={props.userInfo}
                 isShowing={showForm}
                 closeModal={() => setBookForm(false)}
                 handleInput={(name, value) => handleInput(name, value)}

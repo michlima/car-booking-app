@@ -4,7 +4,6 @@ const Clock = (props) => {
     const [value, setValue] = useState()
     
     const handleClock = (value) => {
-        console.log(value)
        props.handleClock(value)
        setValue(value => value + 1)
     }
