@@ -1,31 +1,84 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
-import {FaCarAlt, FaSignOutAlt} from 'react-icons/fa'
-import {BsFillCalendar2DayFill} from 'react-icons/bs'
-import {BiTrip} from 'react-icons/bi'
-import { auth } from '../backend/firebase'
-
-
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { FaCarAlt, FaSignOutAlt } from "react-icons/fa";
+import { BsFillCalendar2DayFill } from "react-icons/bs";
+import { BiTrip } from "react-icons/bi";
+import { auth } from "../backend/firebase";
+import { slide as Menu } from "react-burger-menu";
+import logo from "./pictures/ywam-logo.png";
+import "./nav.css";
 
 const Navigation = (props) => {
-    let buttoncls = ' border-b-4 border-primary-2 duration-200 translate-y-4 mx-4 w-16 bg-gray-800 text-white h-16 rounded-full flex items-center justify-center'
+  console.log(props);
+  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  let buttoncls =
+    "duration-200 text-white w-48 flex justify-center  h-full flex items-center justify-center";
 
-    const signOut = () => {
-        auth.signOut()
-    }
-    
+  const signOut = () => {
+    navigate("/");
+    auth.signOut();
+  };
+  const showSettings = (event) => {
+    event.preventDefault();
+  };
+  const menuText =
+    "text-xl pb-5  hover:bg-blue-500 w-full py-5 px-10 hover:pl-20 duration-500";
+  var isMenuOpen = function (state) {
+    return false;
+  };
 
-    return(
-        <div className='fixed  top-0 duration-200 w-full flex items-center justify-center h-12 mb-10 bg-gray-800'>
-            <Link to='/' className={buttoncls} >
-                <FaCarAlt size={30}/>
-            </Link>
-            <Link to='my-reservations' className={buttoncls}>
-                <BiTrip size={30} myReservastions={props.myReservations}/>
-            </Link>
-            <button className={buttoncls}   onClick={signOut}><FaSignOutAlt size={30}/></button>
+  const whenHome = () => {
+    setMenuOpen(!menuOpen);
+    props.getData(new Date());
+  };
+
+  return (
+    <div className=" z-40 fixed top-0 duration-200 w-screen flex bg-slate-800 h-20  bg-white">
+      <Menu
+        className="no-scrollbar"
+        isOpen={menuOpen}
+        onOpen={() => setMenuOpen(true)}
+        onClose={() => setMenuOpen(false)}
+      >
+        <Link onClick={() => whenHome()} to="/" className={menuText + " mt-20"}>
+          <p>Reserve Car</p>
+        </Link>
+        <Link
+          onClick={() => setMenuOpen(!menuOpen)}
+          to="/my-reservations"
+          className={menuText}
+        >
+          <p>My reservations</p>
+        </Link>
+        {props.userInfo.isSuper ? (
+          <Link
+            onClick={() => setMenuOpen(!menuOpen)}
+            to="/admin-page"
+            className={menuText}
+          >
+            <p>Admin</p>
+          </Link>
+        ) : (
+          <></>
+        )}
+
+        <div className="w-full flex items-center justify-center mt-[100%]">
+          <img src={logo} className=" w-full px-28" />
+          <p className="text-slate-200 font-semibold text-center">bb carpool</p>
         </div>
-    )
-}
+        <div className="absolute bottom-3 w-full">
+          <a className="text-[0.7rem] text-gray-400 w-full flex justify-center italic text-center">
+            beta version- 3.0.0
+          </a>
+        </div>
+      </Menu>
+      <button className={buttoncls + " absolute right-0 "} onClick={signOut}>
+        Log out
+        <FaSignOutAlt className="ml-4" size={20} />
+      </button>
+    </div>
+  );
+};
 
-export default Navigation
+export default Navigation;

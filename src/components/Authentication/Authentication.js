@@ -1,7 +1,7 @@
 import React, {useState} from 'react'
 import Input from '../Input';
 import { Link, Navigate } from 'react-router-dom'
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from '../../backend/firebase';
 import { signIn } from '../../backend/utils';
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
@@ -13,6 +13,7 @@ import ywamPicture from '../pictures/ywam_bb.png'
 const providerGoogle = new GoogleAuthProvider();
 
 const Authentication = (props) => {
+    const [errorMessage, setErrMessage] = useState('')
     const [credentials, setCredentials] = useState({
         email: '',
         password: '',
@@ -49,13 +50,24 @@ const Authentication = (props) => {
     }
 
     const singIn = () => {
-        signIn(credentials)
+        signInWithEmailAndPassword(auth, credentials.email, credentials.password)
+        .then((userCredential) => {
+            // Signed in 
+            const user = userCredential.user;
+            console.log(user)
+        })
+        .catch((error) => {
+            setErrMessage('Error: email or passsword might be incorrect.')
+            const errorCode = error.code;
+            const errorMessage = error.message;
+        });
     }
 
     return (
         <div className='w-screen h-screen flex items-center justify-center flex-col -translate-y-10 select-none'>
             <img alt='YWAM BB' className='h-28 -translate-x-2' src={ywamPicture}/>
             <a className='text-2xl mb-3 text-gray-900'>Car Pool</a>
+            <p className='p-4 text-red-500'>{errorMessage}</p>
             <Input label='email'    handleInput={handleInput} placeholder='email'  />
             <Input label='password' handleInput={handleInput} placeholder='password' type='password' />
             <div className='flex flex-row gap-4'>

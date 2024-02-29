@@ -1,498 +1,481 @@
-import React, {useState, useEffect, useRef} from 'react'
-import { db } from '../../backend/firebase'
-import { getDoc, doc } from 'firebase/firestore'
-import {GoLocation} from 'react-icons/go'
-import {CgArrowsExchange} from 'react-icons/cg'
-import {BiTime} from 'react-icons/bi'
-import {GiPathDistance} from 'react-icons/gi'
-import {AiFillEdit, AiOutlineLoading} from 'react-icons/ai'
-import {RiSendPlane2Fill} from 'react-icons/ri'
-import { MdOutlineArrowBackIos} from 'react-icons/md'
-import Input from '../Input'
-import { writeKms, editTime, payTrip, deleteBooking, writePayments} from '../../backend/utils'
-import Clock from './Clock'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { costPerKM } from '../../backend/utils'
+import React, { useEffect, useState } from "react";
+import { useLocation, Link, useNavigate } from "react-router-dom";
+import { BsFillCalendarDateFill } from "react-icons/bs";
+import { AiFillEdit } from "react-icons/ai";
+import {
+  deleteBooking,
+  editData,
+  editTime,
+  getMonthString,
+} from "../../backend/utils";
+import { IoChevronBackOutline } from "react-icons/io5";
+import { RiArrowRightCircleLine } from "react-icons/ri";
+import { TbArrowsExchange2 } from "react-icons/tb";
+import { AiOutlineClockCircle } from "react-icons/ai";
+import { CiMoneyBill } from "react-icons/ci";
+import { BsFillCalendarCheckFill, BsCheck, BsCheckLg } from "react-icons/bs";
+import { getMonthStringShort } from "../../backend/utils";
+import { writeKms } from "../../backend/utils";
+import Input from "../Input";
+import Clock from "./Clock";
 
-
-
-const mainCls = 'duration-200 relative overflow-auto pb-20 fixed bottom-0 w-screen h-full flex justify-center items-center flex-col bg-opacity-75 backdrop-blur-lg bg-slate-300 select-none'
-
-
-
-const hours = ['12']
-for(let i = 0; i < 24;i++){
-    if(i == 11){
-        hours.push('00')
-        continue
-    }
-    hours.push(`${i + 1}`)
+const hours = ["12"];
+for (let i = 0; i < 24; i++) {
+  if (i == 11) {
+    hours.push("00");
+    continue;
+  }
+  hours.push(`${i + 1}`);
 }
-
 
 const FocusReservation = (props) => {
-    const month = new Date().getMonth()
-    const year = new Date().getFullYear()
-    const day = new Date().getDate()
-    
+  const navigate = useNavigate();
+  const format = "HH:mm";
+  const location = useLocation();
+  const [edit, setEdit] = useState(false);
+  const [errorMessage, setErrorMessage] = useState();
+  const [kms, setKms] = useState();
+  const [time, setTime] = useState(null);
+  const [editables, setEditables] = useState();
+  const [focussing, setFocussing] = useState(null);
+  const [allDay, setAllDay] = useState(false);
+  const [init, setInit] = useState(true);
+  const [startSelect, setStartSelect] = useState(false);
+  const [endSelect, setEndSelect] = useState(false);
+  const [selectingHour, setSelectingHour] = useState(true);
+  const [am, setIsAm] = useState(true);
 
-    const navigate = useNavigate()
-    const location = useLocation()
-    const [gotPayment, setGotPayment] = useState(false)
-    const [errorMessage, setErrorMessage] = useState(false)
-    const [kmsFetched, setKmsFetched] = useState({
-        end: false
-    })
-    const [fillKms, setFillKms] = useState({
-        start: '',
-        end: ''
-    })
-    
-    const [editting, setEditing] = useState({
-        kmsStart: false,
-        kmsEnd: false,
-        timeStart: false,
-        timeEnd: false,
-    })
-
-
-    const [time, setTime] = useState({})
-
-    const [selectingHour, setSelectingHour] = useState(true)
-    const [am, setIsAm] = useState(true)
-
-    useEffect(() => {
-        if(location.state){
-            getkms(location.state.reservationData.id)
-        }
-    }, [])
-
-    useEffect(() => {
-        if(kmsFetched.start && kmsFetched.end && !kmsFetched.price){
-            writePayments(reservationId, kmsFetched, location.state.reservationData.data.car)
-            getkms(location.state.reservationData.id)
-        }
-    }, [kmsFetched])
-  
-    
-    if(location.state === null){
-        sleep(5000).then(() => {
-            setErrorMessage(true)
-        })
-        return(
-            <div className={mainCls}>
-                <div className><AiOutlineLoading className='animate-spin text-primary-2' size={40}/></div>
-                {errorMessage
-                ?
-                    <>
-                        <a>There seems to be a problem.</a>
-                        <button onClick={() => navigate('/')} className='duration-200 bg-white hover:bg-primary-2 m-2 hover:text-white hover:scale-125 px-6 py-2 text-2xl rounded-lg '>Return to main page</button>
-                    </>
-                : 
-                    <></>
-                }
-                
-            </div>
-        )    
-    } 
-    const reservationId = location.state.reservationData.id
-    const reservedBy = location.state.reservationData.data.reservationId ? location.state.reservationData.data.reservationId :  location.state.reservationData.data.reserverID
-    const data = location.state.reservationData.data
-    const canEdit = (props.userid == reservedBy)
-    const reservationMonth = getMonth(data.month)
-            
-    const getkms = async (id) => {
-        if(id){
-            const docRef = doc(db, "kms", id);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                setKmsFetched(docSnap.data())
-                setFillKms(docSnap.data())
-            } else {
-                setKmsFetched({end:false, start:false})
-            }
-        }
-        
-        setTime({
-            startHour: data.startHour,
-            startMinute: data.startMinute,
-            endHour: data.endHour,
-            endMinute: data.endMinute,
-        })
+  const [startSelectEnd, setStartSelectEnd] = useState(false);
+  const [endSelectEnd, setEndSelectEnd] = useState(false);
+  const [selectingHourEnd, setSelectingHourEnd] = useState(true);
+  const [amEnd, setIsAmEnd] = useState(true);
+  useEffect(() => {
+    if (!location.state) {
+      navigate("/");
     }
-    
+    resolveDate();
 
-    const handleInput = (name, value) => {
-        setFillKms(prevState => ({
-            ...prevState,
-            [name]: value
-        }))
+    setInit(false);
+  }, []);
+
+  useEffect(() => {
+    if (!edit && !init) {
+      updateTime();
+    }
+  }, [edit]);
+
+  const updateTime = async () => {
+    await editTime(focussing, editables, props.userid);
+    resolveDate();
+  };
+
+  const resolveDate = async () => {
+    let data = await props.updateFocusing(
+      location.state.id,
+      location.state.data
+    );
+    setFocussing(data);
+  };
+
+  if (!focussing) {
+    return <div>Loading..</div>;
+  }
+
+  const from = location.state.from;
+  const res = focussing.data;
+  const date = new Date(focussing.data.startDate.seconds * 1000);
+  const endDate = new Date(focussing.data.endDate.seconds * 1000);
+  const e = focussing;
+  const d1 = new Date(focussing.data.startDate.seconds * 1000);
+  const d2 = new Date(focussing.data.endDate.seconds * 1000);
+
+  if (!time) {
+    const start = new Date(focussing.data.startDate.seconds * 1000);
+    const end = new Date(focussing.data.endDate.seconds * 1000);
+
+    setTime({
+      startHour:
+        start.getHours() < 10 ? `0${start.getHours()}` : start.getHours(),
+      startMinute:
+        start.getMinutes() < 10 ? `0${start.getMinutes()}` : start.getMinutes(),
+      endHour: end.getHours() < 10 ? `0${end.getHours()}` : end.getHours(),
+      endMinute:
+        end.getMinutes() < 10 ? `0${end.getMinutes()}` : end.getMinutes(),
+    });
+    setEditables({
+      startDate: start,
+      endDate: end,
+    });
+  }
+
+  const postEndKms = async (id) => {
+    let data = {
+      endKms: kms.endKms,
+    };
+    if (!res.startKms) {
+      setErrorMessage("please fill in start kilometers first");
+      return;
+    }
+    let start = Number(res.startKms);
+    let end = Number(kms.endKms);
+    if (start >= end) {
+      setErrorMessage(
+        "start kilometers can not be greater or equal than end kilometers. Please check input again"
+      );
+      return;
     }
 
-    const confirmKms = (name, value) => {
-        setKmsFetched(prevState => ({
-            ...prevState,
-            [name]:value
-        }))
-        writeKms(fillKms, reservationId) 
-    } 
+    await writeKms(date, data, id, props.userid);
+    setErrorMessage("");
+    let d = await props.updateFocusing(focussing.id);
+    setFocussing(d);
+  };
+  const postStartKms = async (id) => {
+    let data = {
+      startKms: kms.startKms,
+    };
+    await writeKms(date, data, id, props.userid);
+    let d = await props.updateFocusing(focussing.id);
+    setFocussing(d);
+  };
 
-    const handleClock = (type, value) => {
-        if(type == 'startHour'){
-            handleClockStart('startHour', value)
-        }
-        if(type == 'startMinute'){
-            handleClockStart('startMinute', value)
-        }
-        if(type == 'endHour'){
-            handleClockEnd('endHour', value)
-        }
-        if(type == 'endMinute'){
-            handleClockEnd('endMinute', value)
-        }
-    }
+  const ReservationDate = () => {
+    return (
+      <p className="flex flex-row gap-2 items-center my-2">
+        <span className="mr-4">
+          <BsFillCalendarDateFill size={28} />
+        </span>
+        {getMonthString(d1.getMonth())} {d1.getDate()} {d1.getFullYear()}
+      </p>
+    );
+  };
 
-    const handleClockEnd = (name,hour) => {
-        let value = hour
-        if(name == 'endHour'){
-            setSelectingHour(false)
-            if(Number(hour) < Number(time.startHour)){
-                value = Number(value) + 12
-            }
+  const handleInput = async (label, value) => {
+    setKms((prevData) => ({
+      ...prevData,
+      [label]: value,
+    }));
+  };
+
+  const postNewData = () => {
+    editData(focussing.id, focussing.data.reserverID, editables, d1);
+    props.updateData();
+    navigate(from);
+  };
+
+  let editButtonCls =
+    "items-center px-5 mx-4 py-2 bg-white drop-shadow-xl rounded-lg duration-1000";
+  if (edit) {
+    editButtonCls =
+      "items-center text-white px-5 mx-4 py-2 bg-blue-800 drop-shadow-xl rounded-lg duration-1000";
+  }
+
+  const deleteReservation = async () => {
+    await deleteBooking(focussing.id, focussing, props.userid);
+    props.updateData();
+    navigate(from);
+  };
+
+  const handleClockStart = (name, hour) => {
+    let value = hour;
+    let date;
+
+    if (name == "startHour") {
+      setSelectingHour(false);
+      if (!am) {
+        if (value == 12) {
+          value = hours[hour];
         } else {
-            setEditing( prevValue =>({
-                ... prevValue,
-                'timeEnd' : false
-            }))
-            setSelectingHour(true)
-            let selectedTime = {endHour: time.endHour, endMinute: hour}
+          value = hours[+hour + 12];
+          setSelectingHour(false);
         }
-        
-        if(!am && name == 'endHour'){
-            if(value == 12){
-                value = hours[hour]    
-            }else {
-                let i = +hour + 12
-                value = hours[+hour + 12]
-            }
-        }
-
-        setTime(prevState => ({
-            ...prevState,
-            [name] : value
-        }))
-        editTime(reservationId, name, value)
-
+      }
+      date = editables.startDate;
+      date.setHours(Number(value), date.getMinutes());
     }
 
-    const handleClockStart = (name,hour) => {
-        let value = hour
-
-        if(!am && name == 'startHour'){
-            if(value == 12){
-                value = hours[hour]    
-            } else {
-                value = hours[+hour + 12]
-            }
-        }
-        setTime(prevState => ({
-            ...prevState,
-            [name] : value
-        }))
-
-        if(name == 'startHour'){
-            setSelectingHour(false)
-        } else {
-            setEditing( prevValue =>({
-                ... prevValue,
-                'timeStart' : false
-            }))
-            setSelectingHour(true)
-        }
-        editTime(reservationId, name, value)
+    if (name == "startMinute") {
+      setSelectingHour(true);
+      date = editables.startDate;
+      date.setHours(date.getHours(), Number(value));
     }
-    
-    const editThis = (name, value) => {
-        setSelectingHour(true)
-        if(name == 'timeStart'){
-            if(editting.timeStart){
-                setEditing( prevValue =>({
-                    ... prevValue,
-                    [name]: false,
-                    'timeEnd' : false
-                }))
-            } else{
-                setEditing( prevValue =>({
-                    ... prevValue,
-                    [name]: value,
-                    'timeEnd' : false
-                }))
-            }
-            
-        }
-        if(name == 'timeEnd'){
-            if(editting.timeEnd){
-                setEditing( prevValue =>({
-                    ... prevValue,
-                    [name]: false,
-                    'timeStart' : false
-                }))
-            } else {
-                setEditing( prevValue =>({
-                    ... prevValue,
-                    [name]: value,
-                    'timeStart' : false
-                }))
-            }
-            
-        }
-        
+    setEditables((prev) => ({
+      ...prev,
+      startDate: date,
+    }));
+
+    setTime((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
+
+  const handleClockEnd = (name, hour) => {
+    let date;
+    let value = hour;
+    if (name == "endHour") {
+      setSelectingHourEnd(false);
+
+      if (Number(hour) < Number(time.startHour)) {
+        value = Number(value) + 12;
+      }
+      date = editables.endDate;
+      date.setHours(Number(value), date.getMinutes());
+    } else {
+      setEndSelectEnd(false);
+      setSelectingHourEnd(true);
     }
 
-    const refreshData = () => {
-        props.getData()
-        navigate(location.state.onReturn)
+    if (name == "endMinute") {
+      setSelectingHourEnd(true);
+      date = editables.endDate;
+      date.setHours(date.getHours(), Number(value));
     }
 
-    const deleteItem = async () => {
-        props.removeFromSchedule(reservationId)
-        
-        await deleteBooking(reservationId)
-        props.getData().then(() => {
-            navigate(location.state.onReturn)
-        }) 
-    }
-    const markAsPaid = async () => {
-        payTrip(reservationId)
-        props.getData().then(() => {
-            navigate(location.state.onReturn)
-        })
-    }
+    setEditables((prev) => ({
+      ...prev,
+      endDate: date,
+    }));
 
+    setTime((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
 
-    
-    if(kmsFetched.start == 'loading') {
-        return (
-            <div className=''>
-                <div className=' absolute top-0 w-screen bg-gray-800 flex justify-enter items-center  pb-4 flex-col'>
-                    <a className='text-2xl text-white mt-5'>{data.driver}</a>
-                </div>
-                <div className='w-screen h-screen flex items-center justify-center'><AiOutlineLoading className='animate-spin text-primary-2' size={40}/></div>
-            </div>
-        )
+  const handleClock = (type, value) => {
+    switch (type) {
+      case "startHour":
+        handleClockStart("startHour", value);
+        break;
+      case "startMinute":
+        handleClockStart("startMinute", value);
+      case "endHour":
+        handleClockEnd("endHour", value);
+        break;
+      default:
+        handleClockEnd("endMinute", value);
+        break;
     }
+  };
 
-    function sleep (time) {
-        return new Promise((resolve) => setTimeout(resolve, time));
-    }
-
-    return(
-        <div className={mainCls} >
-            <div className='absolute top-0 w-screen bg-gray-800 flex justify-enter items-center pb-4 flex-col '>
-                <button onClick={refreshData} className='absolute flex items-center justify-center top-1 left-3 w-12 h-12 mt-2 text-white '><MdOutlineArrowBackIos size={20}/> </button>
-                <a className='text-2xl text-white mt-5'>Driver: {data.driver}</a>
-                <a className='text-sm text-white mt-5'>reserved by: {data.reserverName}</a>
-            </div>
-                <div className='w-screen mt-28 flex flex-col items-center justify-center '>
-                    <div className='bg-gray-800 w-11/12 rounded-lg m-3 text-white text-sm flex flex-row items-center justify-center'>
-                        <div className='flex flex-col items-center justify-center'>
-                            <a className='mx-1 mt-1 flex items-center justify-center font-semibold'><GoLocation className='m-2'/>Harfe</a>
-                        </div>
-                        <CgArrowsExchange className='text-white mx-5 ' size={40}/>
-                        <div className='flex flex-col items-center justify-center'>
-                            <a className=' mx-1 mt-1 flex items-center justify-center font-semibold'><GoLocation className='m-2'/>{data.destination ? data.destination :'??????'}</a>
-                        </div>
-                    </div>
-                    <div className='bg-gray-800 p-5 w-11/12 rounded-lg m-3 text-white flex flex-col items-center justify-center'>
-                        <a className='m-2 flex flex-col items-center'>
-                            Reason:<span className=' font-bold'>{data.reason}</span>
-                            {data.personalTrip ? <a className='text-sm text-primary-2 italic' >personal</a> : <></>}
-                        </a>
-                        <div className='flex flex-row items-center justify-center'>
-                            <div className='flex flex-col items-center justify-center'>
-                                <a className='mx-2 mt-1 flex items-center justify-center font-semibold'>Start</a>
-                                <div className='flex flex-row items-center justify-center flex-col'>
-                                    <a className=' mx-2 mt-1 text-3xl flex items-center justify-center font-semibold'>{time.startHour}:{time.startMinute}</a>                            
-                                    {canEdit && day <= data.day && month <= reservationMonth &&  year <= data.year
-                                    ?
-                                        <button onClick={() => editThis('timeStart', true)}>
-                                            <AiFillEdit size={20} className='text-primary-2'/>
-                                        </button>
-                                    :
-                                        <></>
-                                    }
-                                </div>
-                            </div>
-                            <CgArrowsExchange className='text-white mx-10' size={40}/>
-                            <div className='flex flex-col items-center justify-center'>
-                                <a className=' mx-2 mt-1 flex items-center justify-center font-semibold'>End</a>
-                                <div className='flex flex-row items-center justify-center flex-col'>
-                                    <a className=' mx-2 mt-1 text-3xl flex items-center justify-center font-semibold'>{time.endHour}:{time.endMinute}</a>
-                                    {canEdit && day <= data.day && month <= reservationMonth &&  year <= data.year
-                                    ?
-                                        <button onClick={() => editThis('timeEnd', true)}>
-                                            <AiFillEdit size={20} className='text-primary-2'/>
-                                        </button>
-                                    :
-                                        <></>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                        {editting.timeEnd
-                        ?
-                            <Clock hours={hours} hour={selectingHour} am={am}setIsAm={() => setIsAm(!am)} handleClock={selectingHour ? ( value) => handleClock('endHour', value) :( value) => handleClock('endMinute', value) }/>  
-                        :
-                            <></>
-                        }
-                        {editting.timeStart
-                        ?
-                            <Clock hours={hours} hour={selectingHour} am={am}setIsAm={() => setIsAm(!am)} handleClock={selectingHour ? ( value) => handleClock('startHour', value) :( value) => handleClock('startMinute', value) }/>  
-                        :
-                            <></>
-                        }
-                        {editting.timeEnd || editting.timeStart
-                        ?
-                            <></>
-                        :
-                            <BiTime size={40}/>
-                        }
-                        
-                    </div>
-                    <div className='bg-gray-800 p-5 w-11/12 rounded-lg m-3 text-white flex flex-col items-center justify-center'>
-                        {!kmsFetched.start && !kmsFetched.end
-                        ?
-                            <a className='text-red-400 text-3xl m-2 font-bold'>
-                                !KMS!
-                            </a>       
-                        :
-                            !kmsFetched.end
-                            ?
-                                <a className='text-primary-2 text-1xl m-2 font-bold'>
-                                    !KMS!
-                                </a>  
-                            :
-                            <></>
-                        }
-                        
-                        <div className='flex flex-row items-center justify-center'>
-                            <div className='flex flex-col items-center justify-center'>
-                                <a className='mx-2 mt-1 flex items-center justify-center font-semibold'>Start</a>
-                                {kmsFetched.start 
-                                ? 
-                                    <a className=' mx-2 mt-1 flex text-3xl items-center justify-center font-semibold'>{kmsFetched.start}</a>
-                                :
-                                    <a className=' mx-2 mt-1 flex text-3xl items-center justify-center font-semibold'>??????</a>
-                                }
-                            </div>
-                            <CgArrowsExchange className='text-white mx-2' size={40}/>
-                            <div className='flex flex-col items-center justify-center'>
-                                <a className=' mx-2 mt-1  flex items-center justify-center font-semibold'>End</a>
-                                {kmsFetched.end 
-                                    ? 
-                                        <a className=' mx-2 mt-1 flex text-3xl items-center justify-center font-semibold'>{kmsFetched.end}</a>
-                                    :
-                                        <a className=' mx-2 mt-1 flex text-3xl items-center justify-center font-semibold'>??????</a>
-                                    }
-                            </div>
-                        </div>
-                        <GiPathDistance className='m-2' size={40}/>
-                        {canEdit
-                        ?
-                            <>
-                                {!kmsFetched.start ||  editting.kmsStart 
-                                    ?
-                                        <div className='flex flex-row w-full items-center justify-center'>
-                                            <Input label='start' placeholder='start kms...'  handleInput={(name, value) => handleInput(name, value)}/>
-                                            <button  onClick={() => confirmKms('start', fillKms.start)}className='flex -translate-y-2 ml-2'><RiSendPlane2Fill size={30}/></button>
-                                        </div>
-                                    :
-                                        <></>
-                                        
-                                }
-                            
-                                {!kmsFetched.end || editting.kmsEnd 
-                                ?
-                                    <div className='flex flex-row w-full items-center justify-center'>
-                                        <Input label='end' placeholder='end kms...'  handleInput={(name, value) => handleInput(name, value)}/>
-                                        <button onClick={() => confirmKms('end', fillKms.end)} className=' flex -translate-y-2 ml-2'><RiSendPlane2Fill size={30}/></button>
-                                    </div>
-                                :
-                                    <></>
-                                }
-                            </>
-                        :
-                            <></>
-                        }
-                        
-                    </div>
-                </div>
-                {data.personalTrip && kmsFetched.end && kmsFetched.start && data.reserverID == props.userid || props.userInfo.admin && kmsFetched.end && kmsFetched.start
-                    ?
-                        !data.paid
-                        ?
-                            <div className='bg-gray-800 p-5 w-11/12 rounded-lg m-3 text-white flex flex-col items-center justify-center'>
-                                <a className='text-3xl font-semibold text-primary-2'>{kmsFetched.end - kmsFetched.start}kms</a>
-                                <div className='flex flex-row m-2'>
-                                    <a className='text-green-500 text-2xl'>€</a>
-                                    <a className='text-2xl'>{kmsFetched.price}</a>
-                                </div>
-                                {props.userInfo.admin
-                                    ?
-                                        <button onClick={markAsPaid} className='duration-200 text-black bg-white hover:bg-green-500 hover:text-white px-6 py-2 text-2xl rounded-lg '>Mark as paid</button>
-                                    :
-                                        <></>
-                                }
-                        
-                            </div>
-                        :
-                            <div className='bg-gray-800 p-5 w-11/12 rounded-lg m-3 text-white flex flex-col items-center justify-center'>
-                                <div className='flex flex-row m-2'>
-                                    <a className='text-green-500 text-2xl'>fully paid!</a>
-                                </div>
-                            </div>
-                    :
-                        <></>
-                }
-                {canEdit && !kmsFetched.start && !kmsFetched.end || props.userInfo.admin
-                ?
-                    <button onClick={deleteItem} className='duration-200 m-2 bg-white hover:bg-red-500 hover:text-white px-6 py-2 text-2xl rounded-lg '  >Delete</button>
-                :
-                <button onClick={() => refreshData()} className='duration-200 bg-white hover:bg-primary-2 hover:text-white  px-6 py-2 text-2xl rounded-lg '  >Go Back</button>
-                }
+  return (
+    <div className="mt-20 pt-2 flex items-center flex-col justify-center">
+      <div className="w-11/12 flex flex-row my-2 justify-center items-center">
+        <Link
+          to={from}
+          className="items-center px-5 py-3 bg-white drop-shadow-xl rounded-lg"
+        >
+          <div>
+            <IoChevronBackOutline size={30} className="" />
+          </div>
+        </Link>
+        <div className=" w-full"></div>
+        <div className={editButtonCls}>
+          {edit ? (
+            <button onClick={() => setEdit(!edit)}>
+              <BsCheckLg size={30} />
+            </button>
+          ) : (
+            <button onClick={() => setEdit(!edit)}>
+              <AiFillEdit size={30} className="" />
+            </button>
+          )}
         </div>
-    )
-}
+      </div>
+      <div className="flex flex-col w-11/12  drop-shadow-md  rounded-lg   bg-white items-center">
+        <p className="m-2 text-red-500 font-semibold text-center w-full px-2">
+          {errorMessage}
+        </p>
+        <div className="flex flex-row pt-2 w-full px-5 ">
+          <div className="flex flex-col w-full">
+            <p className="text-slate-500">status</p>
+            <p className="text-slate-500">car</p>
+            <p className="text-slate-500">driver</p>
+          </div>
+          <div className="flex flex-col w-full">
+            <p
+              className={
+                res.paid
+                  ? "text-blue-800 text-right w-full"
+                  : "text-red-300 text-right  w-full"
+              }
+            >
+              {res.paid ? "paid" : "awaiting payment"}
+            </p>
+            <p className="text-right w-full">{res.car}</p>
+            <p className="text-right w-full">{res.driver}</p>
+          </div>
+        </div>
+        <div className="bg-slate-100 w-full h-[0.1rem]" />
+        <div className="flex flex-row w-full mx-4 my-2 items-center m-5">
+          <div className="flex flex-col items-center justify-center w-full">
+            <CiMoneyBill size={50} className="text-blue-800" />
+            {res.startKms && res.endKms ? (
+              <p className="text-slate-400">
+                €{((res.endKms - res.startKms) * res.cost).toFixed(2)}
+              </p>
+            ) : (
+              <p className="text-slate-400">--</p>
+            )}
+          </div>
+          <div className="flex flex-col items-center justify-center w-full">
+            <TbArrowsExchange2 size={50} className="text-blue-800" />
+            {res.startKms && res.endKms ? (
+              <p className="text-slate-400">{res.endKms - res.startKms}kms</p>
+            ) : (
+              <p className="text-slate-400">--</p>
+            )}
+          </div>
+          <div className="flex flex-col items-center justify-center w-full">
+            <BsFillCalendarCheckFill size={35} className="text-blue-800 m-2" />
+            {res.longTrip ? (
+              <div className="flex flex-row text-slate-400">
+                <p className="text-slate-400 pr-2">
+                  {getMonthStringShort(date.getMonth())} {date.getDate()}
+                </p>
+                -
+                <p className="pl-2 text-slate-400">
+                  {getMonthStringShort(endDate.getMonth())} {endDate.getDate()}
+                </p>
+              </div>
+            ) : (
+              <p className="text-slate-400">
+                {getMonthStringShort(date.getMonth())} {date.getDate()}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-row items-center w-full justify-center my-2">
+          {edit ? (
+            <></>
+          ) : (
+            <AiOutlineClockCircle size={25} className="text-blue-800 mx-2" />
+          )}
+          {edit ? (
+            <div className="flex flex-col items-center justify-center">
+              <AiOutlineClockCircle size={25} className="text-blue-800 mx-2" />
+              <div className="flex flex-row gap-10 m-3">
+                <div className="flex flex-col w-[7rem] flex items-center">
+                  <p className="text-sm text-slate-400"> Start Time</p>
+                  <button className="duration-200 text-3xl text-blue-800">
+                    {time.startHour} : {time.startMinute}
+                  </button>
+                  <Clock
+                    hours={hours}
+                    hour={selectingHour}
+                    am={am}
+                    setIsAm={() => setIsAm(!am)}
+                    handleClock={
+                      selectingHour
+                        ? (value) => handleClock("startHour", value)
+                        : (value) => handleClock("startMinute", value)
+                    }
+                  />
+                </div>
 
-const getMonth = (month) => {
-    switch (month) {
-        case 'January':
-            return 0
-        case 'February':
-            return 1
-        case 'March':
-            return 2
-        case 'April':
-            return 3
-        case 'May':
-            return 4
-        case 'June':
-            return 5
-        case 'July':
-            return 6
-        case 'August':
-            return 7
-        case 'September':
-            return 8
-        case 'October':
-            return 9
-        case 'November':
-            return 10
-        case 'December':
-            return 11
-        default:
-            return 
-    }
-}
+                <div className="flex flex-col w-[7rem] flex items-center">
+                  <p className="text-sm text-slate-400"> End Time</p>
+                  <button className="duration-200 text-3xl text-blue-800">
+                    {time.endHour} : {time.endMinute}
+                  </button>
 
-export default FocusReservation
+                  <Clock
+                    hours={hours}
+                    hour={selectingHourEnd}
+                    am={amEnd}
+                    setIsAm={() => setIsAmEnd(!amEnd)}
+                    handleClock={
+                      selectingHourEnd
+                        ? (value) => handleClock("endHour", value)
+                        : (value) => handleClock("endMinute", value)
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-row items-center justify-center gap-1">
+              <p className="font-semibold text-lg">
+                {date.getHours()}:
+                {date.getMinutes() < 10
+                  ? "0" + date.getMinutes()
+                  : date.getMinutes()}
+              </p>
+              -
+              <p className="font-semibold text-lg">
+                {endDate.getHours()}:
+                {endDate.getMinutes() < 10
+                  ? "0" + endDate.getMinutes()
+                  : endDate.getMinutes()}
+              </p>
+            </div>
+          )}
+        </div>
+        <div className="bg-slate-100 w-full h-[0.1rem]" />
+        <p className="text-slate-500 text-xs mt-4">reason:</p>
+        <p className="text-slate-500 ">{res.reason}</p>
+        <p className="text-slate-500 text-xs mt-4">destination:</p>
+        <p className="text-slate-500 ">{res.destination}</p>
+        {res.startKms ? (
+          <div className="h-16 flex items-center justify-center ">
+            <p className="text-xl font-semibold">Start: {res.startKms}kms</p>
+          </div>
+        ) : (
+          <div className="flex flex-row items-top justify-center h-16 w-[95%] mb-2">
+            <Input
+              class={"bookCar"}
+              label="startKms"
+              placeholder="start kilometers"
+              handleInput={(label, value) => handleInput(label, value)}
+            />
+            <button
+              onClick={() => postStartKms(e.id)}
+              className="bg-white h-12 mx-2"
+            >
+              <RiArrowRightCircleLine size={35} />
+            </button>
+          </div>
+        )}
+        {res.endKms ? (
+          <div className="h-16 flex items-center justify-center mb-2">
+            <p className="text-xl font-semibold">End: {res.endKms}kms</p>
+          </div>
+        ) : (
+          <div className="flex flex-row items-top justify-center h-16 w-[95%] mb-2">
+            <Input
+              class={"bookCar"}
+              label="endKms"
+              placeholder="end kilometers"
+              handleInput={(label, value) => handleInput(label, value)}
+            />
+            <button
+              onClick={() => postEndKms(e.id)}
+              className="bg-white h-12 mx-2"
+            >
+              <RiArrowRightCircleLine size={35} />
+            </button>
+          </div>
+        )}
+        <Link
+          to={{ pathname: from }}
+          className="w-10/12 bg-blue-800 text-white text-center py-3 m-5 px-5 text-semibold rounded-lg"
+        >
+          Go Back
+        </Link>
+        {res.startKms || res.endKms ? (
+          <></>
+        ) : (
+          <button
+            className="w-10/12 bg-red-500  text-white text-center py-3 m-5 px-5 text-semibold rounded-lg"
+            onClick={() => deleteReservation()}
+          >
+            Delete Reservation
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default FocusReservation;

@@ -1,123 +1,195 @@
-import React, { useEffect, useState } from 'react'
-import { getDoc, doc, increment } from 'firebase/firestore'
-import { db } from '../../backend/firebase'
-import { Link } from 'react-router-dom'
-import {GiSteeringWheel} from 'react-icons/gi'
-import {BiUser} from 'react-icons/bi'
-import { costPerKM } from '../../backend/utils'
+import React, { useEffect, useRef, useState } from "react";
+import { getDocs, collection } from "firebase/firestore";
+import { db } from "../../backend/firebase";
+import { BsFillSquareFill } from "react-icons/bs";
+import { BookingCard } from "./BookingCard";
+import { PieChart } from "react-minimal-pie-chart";
+
+const colors = ["#005b96", "#AEAEAE", "#F5F5F5", "#F5F5F5"];
 
 const ViewCost = (props) => {
-    let [cls, setCls] = useState()
-    const [kmsFetched, setKmsFetched] = useState({
-        end:'loading', 
-        start:false
-    })
+  const [myReservations, setMyReservations] = useState(null);
+  const [reservationsShow, setReservationsShow] = useState(null);
+  const [pieData, setPieData] = useState();
+  const [carFilter, setCarFilter] = useState(false);
+  const [up, setUp] = useState(0);
 
-    useEffect(() => {
-        getKms()
-    },[])
-
-    
-
-    useEffect(() => {
-        switch (props.reservation.data.car) {
-            case 'Truck':
-                setCls('relative flex flex-row w-full items-center justify-center h-full bg-white rounded-full bg-white')
-                break;
-            case 'Blue Van':
-                setCls('relative flex flex-row w-full items-center justify-center h-full bg-white rounded-full bg-blue-500')
-                break;
-            case 'SOH':
-                setCls('relative flex flex-row w-full items-center justify-center h-full bg-white rounded-full bg-gray-400')
-                break;
-            default:
-                break;
+  const getMyRes = async () => {
+    let data = [];
+    const querySnapshot = await getDocs(
+      collection(db, "user-reservations", props.user.uid, "my-reservations")
+    );
+    querySnapshot.forEach((doc) => {
+      // doc.data() is never undefined for query doc snapshots
+      const newData = {
+        id: doc.id,
+        data: doc.data(),
+        hardDate: doc.data().startDate.seconds,
+      };
+      data.push(newData);
+    });
+    for (let i = 0; i < data.length; i++) {
+      let biggest = data[i].hardDate;
+      let index = i;
+      for (let j = i + 1; j < data.length; j++) {
+        if (biggest < data[j].hardDate) {
+          biggest = data[j].hardDate;
+          index = j;
         }
-    })
-   
-    const getKms = async () => {
-            const docRef = doc(db, "kms", props.reservation.id);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                setKmsFetched(docSnap.data())
-            } else {
-                setKmsFetched({end:false, start:false})
-            }
-        
+      }
+      if (biggest !== i) {
+        let aux = data[i];
+        data[i] = data[index];
+        data[index] = aux;
+      }
     }
+    getStats(data);
+    setMyReservations(data);
+    setReservationsShow(data);
+  };
 
-    if(kmsFetched.end == 'loading'){
-        return(
-            <div className='flex flex-col px-1 w-screen items-center justify-center rounded-l-full m-3'>
-                <div className='relative flex flex-row w-full items-center justify-center h-full bg-white rounded-full'>
-                        <div className='flex flex-col items-center justify-center text-1xl w-16 h-16 p-4 bg-white shadow-lg rounded-full'>
-                            <a className='animate-pulse bg-gray-200 w-12 h-4 rounded-full  text-2xl m-1'></a>
-                            <a className='animate-pulse bg-gray-200 w-8 h-4 rounded-full  text-2xl'></a>
-                        </div>
-                    <div className='flex flex-col w-full items-center justify-center'>
-                        <a className='animate-pulse bg-gray-200 w-40 h-4 rounded-full  text-2xl m-1'></a>
-                        <a className='animate-pulse bg-gray-200 w-24 h-4 rounded-full  text-2xl m-1'></a>
-                    </div>
-                    <div className='absolute  bg-white right-0 flex flex-row items-center justify-center shadow-lg rounded-full w-16 h-16'>
-                        <a className='animate-pulse bg-gray-200 w-12 h-4 rounded-full  text-2xl m-1'></a>
-
-                    </div>
-                </div>
-                <div className='flex bg-gray-800 py-3 flex-col items-center justify-center rounded-b-full text-white w-10/12'>
-                    <a className='animate-pulse bg-gray-200 w-36 h-4 rounded-full  text-2xl m-1'></a>
-                    <a className='animate-pulse bg-gray-200 w-36 h-4 rounded-full  text-2xl m-1'></a>
-                </div>
-            </div>
-        )
+  const getStats = (allData) => {
+    let count = [];
+    for (let i = 0; i < props.carlist.length; i++) {
+      count[i] = 0;
     }
+    allData.map((o) => {
+      const e = o.data;
+      for (let i = 0; i < props.carlist.length; i++) {
+        if (e.car == props.carlist[i].data.name) {
+          count[i] = count[i] + 1;
+        }
+      }
+    });
+    let pie = [];
+    props.carlist.map((e, index) => {
+      pie.push({
+        title: e.data.name,
+        value: count[index],
+        color: colors[index],
+      });
+    });
+    setPieData(pie);
+  };
 
+  useEffect(() => {
+    getMyRes();
+  }, []);
+
+  if (!reservationsShow) {
     return (
-        <Link to='/focus-reservation' state={{ reservationData: props.reservation, userInfo: props.userInfo, onReturn:props.onReturn}} className='flex flex-col px-1 w-screen items-center justify-center rounded-l-full m-3'>
-            <div className={cls}>
-                {kmsFetched.start && kmsFetched.end
-                ?
-                    <>
-                        <div className='absolute left-0 flex flex-col items-center justify-center text-1xl w-16 h-16 p-4 bg-white shadow-lg rounded-full'>
-                            <a className='text-2xl'>{kmsFetched.end - kmsFetched.start}</a>
-                            <a className='text-xs'>km</a>
-                        </div>
+      <div className="pt-28 bg-white-400 h-screen w-screen flex flex-col items-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+  console.log("updating..");
 
-                        <div className='flex flex-col  w-full h-16 pr-16 pl-16 items-center justify-center'>
-                            <a className='font-semibold text-center'>Harfe - {props.schedule.destination}</a>
-                            <a className='italic '>{props.schedule.day} {props.schedule.month} {props.schedule.year}</a>
-                        </div>
-                        <div className='absolute  bg-white right-0 flex flex-row items-center justify-center shadow-lg rounded-full w-16 h-16'>
-                            <a className='text-green-500 text-2xl'>€</a>
-                            <a className='text-[1.2rem]'>{kmsFetched.price}</a>
-                        </div>
-                    </>
-                :
-                    <>
-                        <div className='absolute left-0 text-[1.2rem] flex flex-col items-center justify-center text-1xl w-16 h-16 p-4 bg-primary-2 shadow-lg rounded-full'>
-                            ?
-                        </div>
-                        <div className='flex flex-col  w-full h-16 pr-16 pl-16 items-center justify-center'>
-                            <a className='font-semibold'>Harfe - {props.schedule.destination}</a>
-                            <a className='italic '>{props.schedule.day} {props.schedule.month} {props.schedule.year}</a>
-                        </div>
-                        <div className='absolute  bg-white right-0 flex flex-row items-center justify-center shadow-lg rounded-full w-16 h-16'>
-                        <a className=' flex items-center justify-center rounded-full bg-primary-2 text-[1.2rem] w-16 h-16'>?</a>
-                        </div>
-                    </>
-                }
-            </div>
-            <div className='flex bg-gray-800 py-3 flex-col items-center justify-center rounded-b-full text-white w-10/12'>
-                <a className='flex flex-row items-center justify-center gap-3'><GiSteeringWheel size={25} className='text-primary-2'/>{props.schedule.driver}</a>
-                <a className='flex flex-row items-center justify-center gap-3'><BiUser          size={25} className='text-primary-2'/>{props.schedule.reserverName}</a>
-            </div>
-            {kmsFetched.start && kmsFetched.end
-            ?
-                <></>
-            :
-                <a className=' italic text-primary-2 bg-white px-4 rounded-full'>Please fill in the kilometers</a>
-            }      
-        </Link>
-    )
-}
+  const updatePage = () => {
+    setUp(up + 1);
+    getMyRes();
+  };
 
-export default ViewCost
+  const filterCar = async (e) => {
+    let color;
+    switch (e) {
+      case "Blue Van":
+        color = colors[0];
+        break;
+      case "SOH":
+        color = colors[1];
+        break;
+      case "Truck":
+        color = colors[2];
+        break;
+
+      default:
+        break;
+    }
+    setPieData([
+      {
+        title: "title",
+        value: 0,
+        color: color[1],
+      },
+      {
+        title: "title",
+        value: 1,
+        color: color,
+      },
+    ]);
+
+    if (e == carFilter) {
+      setCarFilter(false);
+      getStats(myReservations);
+    } else {
+      setCarFilter(e);
+    }
+
+    let newRes = [];
+    await myReservations.map((data) => {
+      if (e == data.data.car) {
+        newRes.push(data);
+      }
+    });
+    setReservationsShow(newRes);
+  };
+
+  return (
+    <div className="pt-28 bg-white-400 h-screen w-screen flex flex-col items-center">
+      <div className="w-24 ">
+        <PieChart
+          data={pieData}
+          lineWidth={30}
+          animate={true}
+          animationDuration={500}
+        />
+      </div>
+      <div className="flex flex-row gap-5 m-3">
+        {props.carlist.map((e, index) => {
+          if (carFilter == e.data.name) {
+            return (
+              <button
+                onClick={() => filterCar(e.data.name)}
+                className="flex flex-row m-3 items-center justify-center bg-slate-200 px-2 py-1 rounded-lg"
+              >
+                <BsFillSquareFill className="mx-2" color={colors[index]} />
+                <p>{e.data.name}</p>
+              </button>
+            );
+          }
+          return (
+            <button
+              onClick={() => filterCar(e.data.name)}
+              className="flex flex-row m-3 items-center justify-center px-2 py-1"
+            >
+              <BsFillSquareFill className="mx-2" color={colors[index]} />
+              <p>{e.data.name}</p>
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex flex-col flex-wrap w-full items-center">
+        {reservationsShow.map((o, index) => {
+          const e = o.data;
+          let date = new Date(e.startDate.seconds * 1000);
+          return (
+            <div className="w-screen flex items-center justify-center">
+              <BookingCard
+                data={e}
+                e={o}
+                date={date}
+                userid={props.userid}
+                carlist={props.carlist}
+                from="/my-reservations"
+                updateData={() => updatePage()}
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+export default ViewCost;
