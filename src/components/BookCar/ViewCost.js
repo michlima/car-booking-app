@@ -5,7 +5,15 @@ import { BsFillSquareFill } from "react-icons/bs";
 import { BookingCard } from "./BookingCard";
 import { PieChart } from "react-minimal-pie-chart";
 
-const colors = ["#005b96", "#AEAEAE", "#F5F5F5", "#F5F5F5"];
+const colors = [
+  "#F97316",
+  "#005b96",
+
+  "#6366F1",
+  "#FCD34D",
+  "#E11D48",
+  "#FBBF24 ",
+];
 
 const ViewCost = (props) => {
   const [myReservations, setMyReservations] = useState(null);
@@ -17,7 +25,7 @@ const ViewCost = (props) => {
   const getMyRes = async () => {
     let data = [];
     const querySnapshot = await getDocs(
-      collection(db, "user-reservations", props.user.uid, "my-reservations")
+      collection(db, "user-reservations", props.user.uid, "my-reservations"),
     );
     querySnapshot.forEach((doc) => {
       // doc.data() is never undefined for query doc snapshots
@@ -78,7 +86,7 @@ const ViewCost = (props) => {
 
   if (!reservationsShow) {
     return (
-      <div className="pt-28 bg-white-400 h-screen w-screen flex flex-col items-center">
+      <div className=" bg-white-400 h-screen w-screen flex flex-col items-center">
         <p>Loading...</p>
       </div>
     );
@@ -90,45 +98,30 @@ const ViewCost = (props) => {
     getMyRes();
   };
 
-  const filterCar = async (e) => {
-    let color;
-    switch (e) {
-      case "Blue Van":
-        color = colors[0];
-        break;
-      case "SOH":
-        color = colors[1];
-        break;
-      case "Truck":
-        color = colors[2];
-        break;
-
-      default:
-        break;
-    }
+  const filterCar = async (selectedCar, index) => {
     setPieData([
       {
         title: "title",
         value: 0,
-        color: color[1],
+        color: colors[index],
       },
       {
         title: "title",
         value: 1,
-        color: color,
+        color: colors[index],
       },
     ]);
 
-    if (e == carFilter) {
+    if (selectedCar == carFilter) {
       setCarFilter(false);
       getStats(myReservations);
     } else {
-      setCarFilter(e);
+      setCarFilter(selectedCar);
     }
 
     let newRes = [];
     await myReservations.map((data) => {
-      if (e == data.data.car) {
+      if (selectedCar == data.data.car) {
         newRes.push(data);
       }
     });
@@ -136,7 +129,8 @@ const ViewCost = (props) => {
   };
 
   return (
-    <div className="pt-28 bg-white-400 h-screen w-screen flex flex-col items-center">
+    <div className=" bg-white-400 h-screen w-screen flex flex-col items-center">
+      <h3 style={{ paddingBlock: "2rem" }}>My Reservations</h3>
       <div className="w-24 ">
         <PieChart
           data={pieData}
@@ -150,7 +144,7 @@ const ViewCost = (props) => {
           if (carFilter == e.data.name) {
             return (
               <button
-                onClick={() => filterCar(e.data.name)}
+                onClick={() => filterCar(e.data.name, index)}
                 className="flex flex-row m-3 items-center justify-center bg-slate-200 px-2 py-1 rounded-lg"
               >
                 <BsFillSquareFill className="mx-2" color={colors[index]} />
@@ -160,7 +154,7 @@ const ViewCost = (props) => {
           }
           return (
             <button
-              onClick={() => filterCar(e.data.name)}
+              onClick={() => filterCar(e.data.name, index)}
               className="flex flex-row m-3 items-center justify-center px-2 py-1"
             >
               <BsFillSquareFill className="mx-2" color={colors[index]} />

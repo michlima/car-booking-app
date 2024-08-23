@@ -1,14 +1,17 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaCarAlt, FaSignOutAlt } from "react-icons/fa";
-import { BsFillCalendar2DayFill } from "react-icons/bs";
-import { BiTrip } from "react-icons/bi";
+import { RxHamburgerMenu } from "react-icons/rx";
+import { IoCloseSharp } from "react-icons/io5";
+import { GoSignOut } from "react-icons/go";
 import { auth } from "../backend/firebase";
-import { slide as Menu } from "react-burger-menu";
-import logo from "./pictures/ywam-logo.png";
 import "./nav.css";
+import TopBarBmController from "./TopBarBmController";
 
 const Navigation = (props) => {
+  const [barOpen, setBarOpen] = useState(false);
+  const [bmZIndez, setZIndex] = useState(-1);
+  const [bmWidth, setBMWidth] = useState("0%");
+
   console.log(props);
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -19,64 +22,121 @@ const Navigation = (props) => {
     navigate("/");
     auth.signOut();
   };
-  const showSettings = (event) => {
-    event.preventDefault();
-  };
+  console.log(props);
+
   const menuText =
     "text-xl pb-5  hover:bg-blue-500 w-full py-5 px-10 hover:pl-20 duration-500";
-  var isMenuOpen = function (state) {
-    return false;
-  };
 
   const whenHome = () => {
     setMenuOpen(!menuOpen);
     props.getData(new Date());
   };
+  console.log(props.userInfo);
+  const navigation = (path) => {
+    closeMenu();
+    navigate(path);
+  };
+  const BarMenu = () => {
+    return (
+      <div
+        style={{
+          color: barOpen ? "grey" : "white",
+          height: "100%",
+          padding: "2rem",
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+        }}
+      >
+        {[
+          { name: "Home", path: "/", access: true },
+          { name: "My Reservations", path: "/my-reservations", access: true },
+          {
+            name: "Admin",
+            path: "/admin-page",
+            access: props.userInfo.isSuper,
+          },
+        ].map((link) => {
+          if (link.access) {
+            return (
+              <button
+                style={{
+                  textAlign: "left",
+                  fontSize: "15px",
+                  padding: "0.5rem",
+                  minWidth: "10rem",
+                }}
+                onClick={() => navigation(link.path)}
+              >
+                {link.name}
+              </button>
+            );
+          }
+        })}
+      </div>
+    );
+  };
+  const closeMenu = () => {
+    setBarOpen(false);
+    setZIndex(-1);
+    setBMWidth("0%");
+  };
+  const openBM = () => {
+    setBarOpen(!barOpen);
+    if (bmZIndez < 30) {
+      setZIndex(50);
+      setBMWidth("100%");
+    } else {
+      setZIndex(-1);
+      setBMWidth("0%");
+    }
+  };
 
   return (
-    <div className=" z-40 fixed top-0 duration-200 w-screen flex bg-slate-800 h-20  bg-white">
-      <Menu
-        className="no-scrollbar"
-        isOpen={menuOpen}
-        onOpen={() => setMenuOpen(true)}
-        onClose={() => setMenuOpen(false)}
-      >
-        <Link onClick={() => whenHome()} to="/" className={menuText + " mt-20"}>
-          <p>Reserve Car</p>
-        </Link>
-        <Link
-          onClick={() => setMenuOpen(!menuOpen)}
-          to="/my-reservations"
-          className={menuText}
+    <div className=" z-40  top-0 duration-200 w-full flex bg-white bg-white h">
+      <div className="w-full bg-slate-800">
+        <div className="flex text-white p-4">
+          <button onClick={() => openBM()} style={{ zIndex: 99 }}>
+            {barOpen ? (
+              <IoCloseSharp size={20} className="text-black" />
+            ) : (
+              <RxHamburgerMenu size={20} />
+            )}
+          </button>
+          <h4 style={{ width: "100%", textAlign: "center" }}>BB Carpool</h4>
+          <button onClick={() => signOut()} style={{ zIndex: 99 }}>
+            <GoSignOut size={20} />
+          </button>
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            width: "75%",
+            top: 0,
+            left: 0,
+            zIndex: bmZIndez,
+            height: "100%",
+            background: "white",
+          }}
         >
-          <p>My reservations</p>
-        </Link>
-        {props.userInfo.isSuper ? (
-          <Link
-            onClick={() => setMenuOpen(!menuOpen)}
-            to="/admin-page"
-            className={menuText}
-          >
-            <p>Admin</p>
-          </Link>
-        ) : (
-          <></>
-        )}
-
-        <div className="w-full flex items-center justify-center mt-[100%]">
-          <img src={logo} className=" w-full px-28" />
-          <p className="text-slate-200 font-semibold text-center">bb carpool</p>
+          <TopBarBmController open={barOpen} widthGrowth={bmWidth}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                marginTop: "10px",
+                background: "white",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%",
+                width: "100%",
+              }}
+            >
+              <BarMenu />
+            </div>
+          </TopBarBmController>
         </div>
-        <div className="absolute bottom-3 w-full">
-          <a className="text-[0.7rem] text-gray-400 w-full flex justify-center italic text-center">
-            beta version- 3.0.0
-          </a>
-        </div>
-      </Menu>
-      <button className={buttoncls + " absolute right-0 "} onClick={signOut}>
-        Log out
-        <FaSignOutAlt className="ml-4" size={20} />
-      </button>
+      </div>
     </div>
   );
 };

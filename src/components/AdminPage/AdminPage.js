@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { getDocs, collection } from "firebase/firestore";
 import { db } from "../../backend/firebase";
+import { MdArrowBack } from "react-icons/md";
 import { BookingCardAdmin } from "../BookCar/BookingCard";
+import { IoIosAddCircle } from "react-icons/io";
+
 import {
   AiFillCar,
   AiOutlineUser,
@@ -10,9 +13,10 @@ import {
 } from "react-icons/ai";
 import { IoChevronBackOutline } from "react-icons/io5";
 import { useWindowSize } from "../utils/utils";
-import { makeSuper, updateCarInfo } from "../../backend/utils";
+import { carDelete, makeSuper, updateCarInfo } from "../../backend/utils";
 import Switch from "react-switch";
 import Input from "../Input";
+import { Link } from "react-router-dom";
 
 const AdminPage = (props) => {
   const [updated, setUpdated] = useState(false);
@@ -93,7 +97,7 @@ const AdminPage = (props) => {
   const getMyRes = async (id) => {
     let data = [];
     const querySnapshot = await getDocs(
-      collection(db, "user-reservations", id, "my-reservations")
+      collection(db, "user-reservations", id, "my-reservations"),
     );
     querySnapshot.forEach((doc) => {
       // doc.data() is never undefined for query doc snapshots
@@ -164,7 +168,7 @@ const AdminPage = (props) => {
                   e.id,
                   e.data.firstName,
                   e.data.lastName,
-                  e.data.isSuper
+                  e.data.isSuper,
                 )
               }
               className="duration-500 bg-white hover:bg-blue-200 rounded-lg drop-shadow-md  p-2 py-3 border m-2 translate-y-2 "
@@ -194,11 +198,25 @@ const AdminPage = (props) => {
     }));
   };
 
+  const deleteCar = () => {
+    carDelete(carID);
+    getData();
+    getCarList();
+  };
+
   console.log(carInfos);
 
   return (
-    <div className="flex h-screen items-center bg-white flex-col p-2 pt-20 select-none z-10">
-      <p className="text-lg my-2">Admin Page</p>
+    <div className="flex h-screen items-center bg-white flex-col p-2 select-none z-10">
+      <div style={{ position: "relative", width: "100%", textAlign: "center" }}>
+        <Link
+          to="/admin-page"
+          style={{ position: "absolute", left: "0", top: 8 }}
+        >
+          <MdArrowBack size={20} />
+        </Link>
+        <h3 className="text-lg my-2">Bookings and Cars</h3>
+      </div>
       <div className="gap-5">
         <button
           onClick={() => setShowUsers(true)}
@@ -246,7 +264,7 @@ const AdminPage = (props) => {
                   const e = o.data;
                   let date = new Date(e.startDate.seconds * 1000);
                   return (
-                    <div className="flex h-[37rem]">
+                    <div className="flex h-[37rem] bg-white">
                       <BookingCardAdmin
                         data={e}
                         e={o}
@@ -270,7 +288,6 @@ const AdminPage = (props) => {
         <div className="w-full flex flex-col items-center justify-center">
           <div className="w-full flex flex-row items-center justify-center">
             {carlist.map((e, index) => {
-              console.log(e);
               return (
                 <button
                   onClick={() => {
@@ -290,6 +307,9 @@ const AdminPage = (props) => {
                 </button>
               );
             })}
+            <Link to="/admin-new-car">
+              <IoIosAddCircle size={20} />
+            </Link>
           </div>
           <div className="m-5 flex flex-col gap-7 items-start">
             <div className="flex flex-row">
@@ -402,6 +422,12 @@ const AdminPage = (props) => {
               Save
             </button>
           )}
+          <button
+            onClick={() => deleteCar()}
+            style={{ color: "red", marginBottom: "3rem" }}
+          >
+            Delete Car
+          </button>
         </div>
       )}
     </div>

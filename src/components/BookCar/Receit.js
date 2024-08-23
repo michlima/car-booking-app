@@ -40,10 +40,10 @@ const Receit = (props) => {
   let location = useLocation();
   const navigate = useNavigate();
   let booking = location.state.bookingData;
-
-  let startDate = `${getMonth(
-    booking.startDate.getMonth()
-  )} ${booking.startDate.getDate()} `;
+  let startDate = location.state.startDate;
+  let endDate = location.state.endDate;
+  console.log(startDate);
+  console.log(endDate);
 
   const getMinutes = (minutes) => {
     if (minutes < 10) {
@@ -54,8 +54,8 @@ const Receit = (props) => {
   };
 
   const ReservationDate = () => {
-    let d1 = booking.startDate;
-    let d2 = booking.endDate;
+    let d1 = startDate;
+    let d2 = endDate;
     if (
       d1.getFullYear() === d2.getFullYear() &&
       d1.getMonth() === d2.getMonth() &&
@@ -116,10 +116,8 @@ const Receit = (props) => {
             <span className="text-xl">
               <PiTimerBold />
             </span>{" "}
-            {booking.startDate.getHours()}:
-            {getMinutes(booking.startDate.getMinutes())} -{" "}
-            {booking.endDate.getHours()}:
-            {getMinutes(booking.endDate.getMinutes())}
+            {startDate.getHours()}:{getMinutes(startDate.getMinutes())} -{" "}
+            {endDate.getHours()}:{getMinutes(endDate.getMinutes())}
           </p>
         </div>
         <div className="bg-slate-100 p-2 rounded-lg m-3 w-4/5">

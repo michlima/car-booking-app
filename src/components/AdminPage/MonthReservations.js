@@ -1,13 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { getMonthReservations } from "../../backend/utils";
-import { getDocs, collection } from "firebase/firestore";
-import { db } from "../../backend/firebase";
-import { BookingCardAdmin } from "../BookCar/BookingCard";
+import { MdArrowBack } from "react-icons/md";
 import { useReactToPrint } from "react-to-print";
-import { CiMoneyBill } from "react-icons/ci";
-import { TbRoute, TbSteeringWheel } from "react-icons/tb";
-import { BsCalendar2Check } from "react-icons/bs";
 import Spreadsheet from "react-spreadsheet";
 import "react-app-polyfill/stable";
 import "../styling/month-reservations.css";
@@ -42,8 +37,7 @@ const monthsAbr = [
 ];
 
 const MonthReservations = (props) => {
-  const [viewingRes, setViewingRes] = useState(props.viewingRes);
-  const [viewingID, setViewingID] = useState(null);
+  const [viewSpreadSheet, setViewSpreadSheet] = useState(false);
   const [today, setToday] = useState(new Date());
   const [carBookings, setCarBookings] = useState({});
   const [rowLabels, setRowLables] = useState({});
@@ -125,8 +119,6 @@ const MonthReservations = (props) => {
       if (e.endKms && e.startKms) {
         cost = `$${(Math.round((e.endKms - e.startKms) * e.cost) * 100) / 100}`;
       }
-      console.log(e.carID);
-      console.log(e);
       spreadSheet.push([
         { value: e.reserverName, readOnly: false },
         { value: e.destination, readOnly: false },
@@ -142,59 +134,151 @@ const MonthReservations = (props) => {
     return spreadSheet;
   };
 
-  if (data) {
-  }
-  console.log(carBookings);
+  console.log(data);
 
   if (data == null) {
     return <p>loading..</p>;
   }
+  const SpreadSheet = () => {
+    return (
+      <div ref={componentRef} style={{ width: "100%", padding: "10px" }}>
+        <p className="text-2xl text-center">
+          {months[today.getMonth()]} {today.getFullYear()}
+        </p>
+        {Object.keys(carBookings).map((car) => {
+          let data = getSpreadSheet(carBookings[car]);
+          return (
+            <div key={car}>
+              {car ? (
+                <div>
+                  <h3>{car}</h3>
+                  <Spreadsheet
+                    className="spread-sheet"
+                    data={data}
+                    allowEditing={false}
+                    columnLabels={columnLabels}
+                    rowLabels={rowLabels[car]}
+                  />
+                </div>
+              ) : (
+                <></>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const ReservationsList = () => {
+    console.log(data);
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+        {data.map((reservation) => {
+          const startDate = new Date(
+            reservation.startDate.seconds * 1000 +
+              reservation.startDate.nanoseconds / 1000000,
+          );
+          const endDate = new Date(
+            reservation.endDate.seconds * 1000 +
+              reservation.endDate.nanoseconds / 1000000,
+          );
+          console.log(reservation);
+          return (
+            <div style={{ width: "100%", padding: ".25rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  width: "100%",
+                }}
+              >
+                <text
+                  style={{
+                    paddingInline: "20px",
+                    paddingBlock: "15px",
+                    background: "black",
+                    color: "white",
+                    display: "flex",
+                    justifyItems: "center",
+                    textAlign: "center",
+                  }}
+                >
+                  {startDate.getDate()}
+                </text>
+                <div style={{ width: "100%" }}>
+                  <h5>{reservation.reserverName}</h5>
+                  <div>
+                    <text>
+                      time:
+                      {startDate.getHours()}:
+                      {startDate.getMinutes() < 9
+                        ? startDate.getMinutes() + "0"
+                        : startDate.getMinutes()}
+                    </text>
+                    -
+                    <text>
+                      {endDate.getHours()}:
+                      {endDate.getMinutes() < 9
+                        ? endDate.getMinutes() + "0"
+                        : endDate.getMinutes()}
+                    </text>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    width: "25%",
+                    paddingInline: "20px",
+                    paddingBlock: "15px",
+                    background: "black",
+                    color: "white",
+                  }}
+                >
+                  {reservation.car}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
-    <div className=" w-screen flex items-center flex-col  bg-white p-2 pt-20 select-none z-10">
-      <Link to="/admin-page">Back</Link>
-      <p>Reservations</p>
+    <div className=" flex items-center flex-col  bg-white p-2 select-none z-10">
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          width: "100%",
+        }}
+      >
+        <Link to="/admin-page">
+          <MdArrowBack size={20} />
+        </Link>
+        <div style={{ width: "100%" }}></div>
+        <button st>DOWNLOAD PDF</button>
+        <div></div>
+        <button></button>
+      </div>
+
+      <h3>Reservations</h3>
       <div>
-        <button onClick={() => handlePrint()}>A file</button>
-        <button onClick={() => lastMonth()} className="p-2 hover:">
-          back
+        <button onClick={() => lastMonth()} className="p-2 ">
+          LAST MONTH
         </button>
         <button onClick={() => nextMonth()} className="p-2 hover:">
-          forward
+          NEXT MONTH
         </button>
       </div>
-      <div></div>
-      {data !== null ? (
-        <div ref={componentRef} style={{ width: "100%", padding: "10px" }}>
-          <p className="text-2xl text-center">
-            {months[today.getMonth()]} {today.getFullYear()}
-          </p>
-          {Object.keys(carBookings).map((car) => {
-            console.log(carBookings[car]);
-            let data = getSpreadSheet(carBookings[car]);
-            return (
-              <div key={car}>
-                {car ? (
-                  <div>
-                    <h3>{car}</h3>
-                    <Spreadsheet
-                      className="spread-sheet"
-                      data={data}
-                      allowEditing={false}
-                      columnLabels={columnLabels}
-                      rowLabels={rowLabels[car]}
-                    />
-                  </div>
-                ) : (
-                  <></>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div></div>
-      )}
+      <button onClick={() => handlePrint()}>Download PDF</button>
+      <div style={{ width: "100%" }}>
+        <ReservationsList />
+      </div>
+      {/* <div style={{ visibility: "hidden" }}>
+        <SpreadSheet />
+      </div> */}
     </div>
   );
 };

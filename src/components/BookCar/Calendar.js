@@ -32,18 +32,28 @@ const Calendar = (props) => {
     setAllDays();
   }, [props.date]);
 
-  const selectDate = (day) => {
+  const selectDate = (day, d) => {
+    d.preventDefault();
     const newDate = new Date(date.year, props.date.getMonth(), day);
     setSelectedDate(newDate);
 
     props.setDate(newDate);
   };
 
+  const navigateCalendar = (e, direction) => {
+    e.preventDefault();
+    if (direction === "left") {
+      props.last();
+    } else {
+      props.next();
+    }
+  };
+
   let i = 0;
   return (
     <div className=" text-black bg-slate-50 flex  flex-col w-screen px-5 items-center  rounded-tr-[2rem]">
       <div className="w-full flex flex-row">
-        <button onClick={() => props.last()} className="pl-4">
+        <button onClick={(e) => navigateCalendar(e, "left")} className="pl-4">
           <MdKeyboardArrowLeft />
         </button>
         <div className="mb-2 w-full flex flex-col items-center">
@@ -52,7 +62,7 @@ const Calendar = (props) => {
           </a>
           <a className="">{date.year}</a>
         </div>
-        <button onClick={() => props.next()} className="pr-4">
+        <button onClick={(e) => navigateCalendar(e, "right")} className="pr-4">
           <MdKeyboardArrowRight />
         </button>
       </div>
@@ -79,7 +89,7 @@ const Calendar = (props) => {
               if (e == selectedDate.getDate()) {
                 return (
                   <button
-                    onClick={() => selectDate(e)}
+                    onClick={(d) => selectDate(e, d)}
                     key={index}
                     className=" p-1 border-b-2 border-b- border-primary-2"
                   >
@@ -90,7 +100,7 @@ const Calendar = (props) => {
               return (
                 <button
                   key={index}
-                  onClick={() => selectDate(e)}
+                  onClick={(d) => selectDate(e, d)}
                   className={cls}
                 >
                   {e}
@@ -105,16 +115,14 @@ const Calendar = (props) => {
 
 // Fabricates days to fit in calendar
 const makeDays = (days, dayOW) => {
-  {
-    let daysArr = [];
-    for (let i = 0; i < dayOW; i++) {
-      daysArr.push("");
-    }
-    for (let i = 0; i < days; i++) {
-      daysArr.push("" + (i + 1));
-    }
-    return daysArr;
+  let daysArr = [];
+  for (let i = 0; i < dayOW; i++) {
+    daysArr.push("");
   }
+  for (let i = 0; i < days; i++) {
+    daysArr.push("" + (i + 1));
+  }
+  return daysArr;
 };
 
 const getMonth = (month) => {

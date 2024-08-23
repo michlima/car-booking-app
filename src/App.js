@@ -26,6 +26,10 @@ import Admin from "./components/AdminPage/Admin";
 import StaffPage from "./components/AdminPage/StaffPage";
 import AddStaff from "./components/AdminPage/AddStaffPage";
 import MonthReservations from "./components/AdminPage/MonthReservations";
+import AccountRequests from "./components/AdminPage/AccountRequests";
+import AccountRequestFeedback from "./components/Authentication/AccountRequestFeedback";
+import AccountsManage from "./components/AdminPage/AccountsManage";
+import AddNewCar from "./components/AdminPage/AddNewCar";
 function App() {
   let today = new Date();
   const [car, setCar] = useState();
@@ -42,10 +46,10 @@ function App() {
   const getData = async (month) => {
     let data = [];
     let dataTimeframe = `${month.getFullYear()}-${convertMonth(
-      month.getMonth()
+      month.getMonth(),
     )}`;
     const querySnapshot = await getDocs(
-      collection(db, "data-timeframe", dataTimeframe, "reservations")
+      collection(db, "data-timeframe", dataTimeframe, "reservations"),
     );
     querySnapshot.forEach((doc) => {
       // doc.data() is never undefined for query doc snapshots
@@ -104,9 +108,12 @@ function App() {
           <Route path="/admin-page" element={<Authentication />} />
           <Route path="/receit" element={<Authentication />} />
           <Route path="/admin-car" element={<Authentication />} />
-          <Route path="/complete-registration" element={<Authentication />} />
           <Route path="/staff-page" element={<Authentication />} />
           <Route path="/add-staff" element={<Authentication />} />
+          <Route
+            path="/account-request-feedback"
+            element={<AccountRequestFeedback />}
+          />
           <Route
             path="/complete-registration"
             element={<CompleteRegistration />}
@@ -142,17 +149,16 @@ function App() {
 
   const updateFocusing = async (id, booking) => {
     let data = [];
-
     let month = new Date(booking.data.startDate.seconds * 1000);
 
     await updateData(month);
 
     let dataTimeframe = `${month.getFullYear()}-${convertMonth(
-      month.getMonth()
+      month.getMonth(),
     )}`;
 
     const querySnapshot = await getDocs(
-      collection(db, "data-timeframe", dataTimeframe, "reservations")
+      collection(db, "data-timeframe", dataTimeframe, "reservations"),
     );
     querySnapshot.forEach((doc) => {
       // doc.data() is never undefined for query doc snapshots
@@ -185,10 +191,10 @@ function App() {
     }
     months.forEach(async (element) => {
       let dataTimeframe = `${element.getFullYear()}-${convertMonth(
-        element.getMonth()
+        element.getMonth(),
       )}`;
       const querySnapshot = await getDocs(
-        collection(db, "data-timeframe", dataTimeframe, "reservations")
+        collection(db, "data-timeframe", dataTimeframe, "reservations"),
       );
       querySnapshot.forEach((doc) => {
         // doc.data() is never undefined for query doc snapshots
@@ -227,7 +233,7 @@ function App() {
   console.log("loop count");
 
   return (
-    <Router>
+    <Router className="w-screen overflow-hidden h-screen">
       <Navigation userInfo={userInfo} getData={(month) => getData(month)} />
       <Routes>
         <Route
@@ -279,6 +285,7 @@ function App() {
           path="/receit"
           element={<Receit updateData={() => updateData(new Date())} />}
         />
+        <Route path="/manage-accounts" element={<AccountsManage />} />
         <Route
           path="/my-reservations"
           element={
@@ -335,7 +342,7 @@ function App() {
             />
           }
         />
-
+        AccountRequests
         <Route
           path="/complete-registration"
           element={
@@ -352,7 +359,9 @@ function App() {
           }
         />
         <Route path="/staff-page" element={<StaffPage />} />
+        <Route path="/account-requests" element={<AccountRequests />} />
         <Route path="/add-staff" element={<AddStaff />} />
+        <Route path="/admin-new-car" element={<AddNewCar />} />
       </Routes>
     </Router>
   );

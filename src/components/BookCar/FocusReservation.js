@@ -72,7 +72,7 @@ const FocusReservation = (props) => {
   const resolveDate = async () => {
     let data = await props.updateFocusing(
       location.state.id,
-      location.state.data
+      location.state.data,
     );
     setFocussing(data);
   };
@@ -120,7 +120,7 @@ const FocusReservation = (props) => {
     let end = Number(kms.endKms);
     if (start >= end) {
       setErrorMessage(
-        "start kilometers can not be greater or equal than end kilometers. Please check input again"
+        "start kilometers can not be greater or equal than end kilometers. Please check input again",
       );
       return;
     }
@@ -260,7 +260,7 @@ const FocusReservation = (props) => {
   };
 
   return (
-    <div className="mt-20 pt-2 flex items-center flex-col justify-center">
+    <div className=" pt-2 flex items-center flex-col justify-center">
       <div className="w-11/12 flex flex-row my-2 justify-center items-center">
         <Link
           to={from}

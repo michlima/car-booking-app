@@ -178,15 +178,6 @@ const CompleteBooking = (props) => {
         startDate: date,
         endDate: date,
       }));
-      await props.schedule.map((e) => {
-        let start = new Date(e.data.startDate.seconds * 1000);
-        if (
-          start.getMonth() == date.getMonth() &&
-          start.getFullYear() == date.getFullYear() &&
-          start.getDate() == date.getDate()
-        ) {
-        }
-      });
     }
   };
 
@@ -197,7 +188,8 @@ const CompleteBooking = (props) => {
     }));
   };
 
-  const multipleDay = () => {
+  const multipleDay = (e) => {
+    e.preventDefault();
     if (!pickRange) {
       setPickRange(true);
       setBookingData((prev) => ({
@@ -288,21 +280,26 @@ const CompleteBooking = (props) => {
     return { valid: true, reason: "" };
   };
 
-  const book = async () => {
+  const book = async (e) => {
+    e.preventDefault();
     const dataCheck = validade();
     let finalBooking = bookingData;
-    finalBooking.startDate.setHours(time.startHour, time.startMinute);
-    finalBooking.endDate.setHours(time.endHour, time.endMinute);
+    let startDate = new Date(bookingData.startDate);
+    let endDate = new Date(bookingData.endDate);
+    startDate.setHours(time.startHour, time.startMinute);
+    endDate.setHours(time.endHour, time.endMinute);
 
     if (dataCheck.valid) {
       try {
-        bookTime(finalBooking);
+        bookTime(finalBooking, startDate, endDate);
       } catch (error) {
         console.log("error");
       } finally {
         navigate("/receit", {
           state: {
             bookingData: finalBooking,
+            startDate: startDate,
+            endDate: endDate,
           },
         });
         props.updateData();
@@ -378,13 +375,13 @@ const CompleteBooking = (props) => {
   };
 
   return (
-    <div className="select-none w-full h-full pt-28 bg-slate-50 flex items-center flex-col mt-2">
-      <div className="flex justify-center items-center flex-col">
-        <p className="text-center">Reservation Car</p>
+    <form className="select-none w-full h-full bg-slate-50 flex items-center flex-col mt-2">
+      <label className="flex justify-center items-center flex-col">
+        <p className="text-center">Reserving</p>
         <p className="text-3xl text-slate-800 font-bold mb-4">{props.car}</p>
-      </div>
+      </label>
       <button
-        onClick={() => multipleDay()}
+        onClick={(e) => multipleDay(e)}
         className={
           pickRange
             ? "w-40 px-5 py-2 bg-blue-300 text-black rounded-lg mb-2 "
@@ -458,7 +455,7 @@ const CompleteBooking = (props) => {
                             />
                             <p className="text-center text-lg">
                               {`${end.getDate()} ${getMonthStringShort(
-                                end.getMonth()
+                                end.getMonth(),
                               )} ${end.getFullYear()}`}
                             </p>
                           </div>
@@ -533,7 +530,8 @@ const CompleteBooking = (props) => {
         <div className="flex flex-col w-[7rem] flex items-center">
           <p className="text-sm text-slate-400"> Start Time</p>
           <button
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
               if (startSelect) {
                 setStartSelect(false);
               } else {
@@ -569,7 +567,8 @@ const CompleteBooking = (props) => {
         <div className="flex flex-col w-[7rem] flex items-center">
           <p className="text-sm text-slate-400"> End Time</p>
           <button
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
               if (endSelect) {
                 setEndSelect(false);
               } else {
@@ -642,13 +641,13 @@ const CompleteBooking = (props) => {
           />
         </div>
         <button
-          onClick={() => book()}
+          onClick={(e) => book(e)}
           className="m-20 bg-slate-700 px-6 py-3 text-white rounded-lg"
         >
           Book Car
         </button>
       </div>
-    </div>
+    </form>
   );
 };
 

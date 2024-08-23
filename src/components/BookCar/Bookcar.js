@@ -24,13 +24,9 @@ const Bookcar = (props) => {
     "duration-500 w-full flex items-center justify-center z-0";
   const flipImageCls = "rotate-180 duration-500";
 
-  let carContainerCls = "flex px-10 gap-20 w-screen ";
+  let carContainerCls = "flex flex-col px-10 gap-5 w-screen ";
   let carDetailsButton = "";
-  let carFrame = "flex flex-col w-[30%] relative h-28";
-  if (width < 1100) {
-    carContainerCls = "flex flex-col w-screen ";
-    carFrame = "flex flex-col w-screen relative mb-4";
-  }
+
   if (width < 414) {
     carDetailsButton = "translate-y-4";
   }
@@ -76,7 +72,7 @@ const Bookcar = (props) => {
               <p className="flex flew-row">
                 Oil :{" "}
                 <span className=" text-red-500">{`${getMonthString(
-                  date.getMonth()
+                  date.getMonth(),
                 )} ${date.getDate()} ${date.getFullYear()}`}</span>
               </p>
               <p>
@@ -117,89 +113,19 @@ const Bookcar = (props) => {
   };
 
   return (
-    <div className="flex items-center bg-white flex-col p-2 pb-20 pt-20 select-none z-10">
+    <div className="flex items-center bg-white flex-col pb-20 select-none z-10">
       <p className="text-red-600">{errorMessages}</p>
-      <p className="text-2xl text-white font-semibold text-center pt-7 pb-2 w-screen bg-slate-800 ">
-        My Trips This Month ({getMonthString(props.today.getMonth())})
-      </p>
-      <div className="w-screen">
-        {props.schedule.length > 0 ? (
-          <div className="flex flex-row overflow-x-auto w-full bg-slate-800 pb-10">
-            {props.schedule.map((e) => {
-              if (e.data.reserverID == props.userid) {
-                const res = e.data;
-                let date = new Date(e.data.startDate.seconds * 1000);
-                let today = new Date();
-                if (showTodayCard) {
-                  if (
-                    date.getMonth() === today.getMonth() &&
-                    date.getFullYear() === today.getFullYear() &&
-                    date.getDate() === today.getDate()
-                  ) {
-                    return (
-                      <div className=" mx-5">
-                        <BookingCard
-                          carlist={props.carlist}
-                          userid={props.userid}
-                          data={res}
-                          e={e}
-                          date={date}
-                          updateData={() => props.updateData()}
-                          from="/"
-                        />
-                      </div>
-                    );
-                  }
-                } else {
-                  return (
-                    <div className=" mx-5 w-full">
-                      <BookingCard
-                        carlist={props.carlist}
-                        userid={props.userid}
-                        data={res}
-                        e={e}
-                        date={date}
-                        updateData={() => props.updateData()}
-                        from="/"
-                      />
-                    </div>
-                  );
-                }
-              }
-            })}
-          </div>
-        ) : (
-          <div className="flex flex-row overflow-x-auto w-screen bg-slate-800 pb-10 items-center justify-center">
-            <p className="text-slate-200 px-10 py-2 bg-slate-600 text-center mt-10 rounded-lg">
-              No resesrvations
-            </p>
-          </div>
-        )}
-      </div>
-      <div className=" flex items-center justify-center py-4 w-screen bg-slate-800 ">
-        <button
-          onClick={() => setShowTodayCard(!showTodayCard)}
-          className={
-            showTodayCard
-              ? "bg-blue-800 px-5 py-3 rounded-lg text-white duration-500"
-              : "bg-white px-4 py-2 rounded-lg duration-500"
-          }
-        >
-          Show Only Today
-        </button>
-      </div>
-
-      <p className="text-2xl font-semibold text-center m-10 w-screen px-10">
+      <p className="text-2xl font-semibold text-center m-1 w-screen px-10">
         Book A Car
       </p>
       <div className={carContainerCls}>
         {props.carlist.map((e) => {
           return (
-            <div className={carFrame}>
+            <div style={{}}>
               <button
                 onClick={() => navigateTo(e.data.name, e.data.cost)}
                 key={e.id}
-                className="bg-white rounded-t-lg drop-shadow-md mb-[1px] flex p-2 relative duration-200 text-slate-700 "
+                className="bg-white rounded-t-lg drop-shadow-md  flex p-2 relative duration-200 text-slate-700 w-full "
               >
                 <div className="p-4 bg-slate-400 w-24 flex items-center justify-center  rounded-lg">
                   <PiVanLight size={45} className="" />
@@ -225,38 +151,6 @@ const Bookcar = (props) => {
                   <MdKeyboardArrowRight size={70} />
                 </button>
               </button>
-              <div
-                className={
-                  showDetails == e.data.name ? noDetailsCls : showDetailsCls
-                }
-              >
-                <CarDetails e={e} />
-              </div>
-              <div className="items-center justify-center flex">
-                <button
-                  className={
-                    showDetails == e.data.name
-                      ? "duration-500 text-slate-700 bg-indigo-500 h-16 w-16 items-center justify-center flex items-center justify-center w-full border-t-[1px] drop-shadow-md rounded-full  border-slate-200 "
-                      : "duration-500 text-slate-700 flex items-center h-8 justify-center w-full border-t-[1px] bg-white drop-shadow-md rounded-b-lg  border-slate-200 "
-                  }
-                  onClick={() => detailsTrigger(e.data.name)}
-                >
-                  <div
-                    className={
-                      showDetails == e.data.name
-                        ? flipImageCls
-                        : "duration-500 flex flex-col items-center justify-center"
-                    }
-                  >
-                    {showDetails == e.data.name ? (
-                      <></>
-                    ) : (
-                      <p className="text-xs text-slate-400">show details</p>
-                    )}
-                    <IoIosArrowDown size={15} />
-                  </div>
-                </button>
-              </div>
             </div>
           );
         })}

@@ -1,20 +1,19 @@
 import React, { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { accountRequestCreate } from "../../backend/utils";
 import Input from "../Input";
-import { buttonCls } from "../classes";
-import { register } from "../../backend/utils";
-import { useNavigate } from "react-router-dom";
-import { auth } from "../../backend/firebase";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { FcGoogle } from "react-icons/fc";
-import { registerData } from "../../backend/utils";
 
-const providerGoogle = new GoogleAuthProvider();
+const validateEmail = (email) => {
+  return String(email)
+    .toLowerCase()
+    .match(
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+    );
+};
 
 const CompleteRegistration = () => {
-  let navigate = useNavigate();
-
-  const email = useRef(window.localStorage.getItem("emailForSignIn"));
+  const [errors, setErrors] = useState({});
+  const [errorMessage, setErrorMessage] = useState("");
   const [userInfo, setUserInfo] = useState({
     email: null,
     password: null,
@@ -22,6 +21,7 @@ const CompleteRegistration = () => {
     lastName: null,
     age: null,
   });
+  const navigate = useNavigate();
 
   const handleInput = (name, value) => {
     setUserInfo((prevState) => ({
@@ -30,65 +30,89 @@ const CompleteRegistration = () => {
     }));
   };
 
-  const registerUser = async () => {
-    let xx = await register(userInfo.email, userInfo);
-    console.log(xx);
-  };
-
-  const registerWithGmail = () => {
-    signInWithPopup(auth, providerGoogle)
-      .then((result) => {
-        // This gives you a Google Access Token. You can use it to access the Google API.
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        const token = credential.accessToken;
-        // The signed-in user info.
-        const user = result.user;
-        registerData(user.uid, user.email, user.displayName, "", "??");
-        // ...
+  const sendRequest = () => {
+    let failures = {};
+    let validations = [
+      { pattern: /[a-z]/, issue: "Must include lowercase letters." },
+      { pattern: /[A-Z]/, issue: "Must include uppercase letters." },
+      { pattern: /.{5,}/, issue: "Must be at least 5 characters long." },
+    ];
+    let validationIssues = validations
+      .filter((validation) => {
+        return !userInfo.password?.match?.(validation.pattern);
       })
-      .catch((error) => {
-        // Handle Errors here.
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.customData.email;
-        // The AuthCredential type that was used.
-        const credential = GoogleAuthProvider.credentialFromError(error);
-        // ...
-      });
-    navigate("/");
+      .map((validation) => validation.issue);
+    if (validationIssues.length > 0) {
+      failures["pwdVerification"] = true;
+    }
+
+    // check if values exists
+    for (const [key, value] of Object.entries(userInfo)) {
+      if (value === null || value.length < 2) failures[key] = true;
+    }
+    // email validation
+    let isEmail = validateEmail(userInfo.email);
+    // if all fields valid
+    console.log(failures);
+    console.log(isEmail);
+    if (Object.entries(failures).length < 1 && isEmail) {
+      let res = accountRequestCreate(userInfo);
+      if (!res) {
+        setErrorMessage("Could not make request, please contact admin");
+      } else {
+        navigate("/account-request-feedback");
+      }
+    } else {
+      // handle error case
+      if (!isEmail || userInfo.length < 5) failures[userInfo.email] = true;
+      setErrors(failures);
+      let pwdIssues = `Your password was too weak for the following reasons: ${validationIssues.join(
+        "\n",
+      )}`;
+      setErrorMessage(pwdIssues);
+    }
   };
 
   return (
     <div className="h-full w-screen overflow-auto pt-10 flex items-center justify-center flex-col -translate-y-10 select-none">
       <p className="text-2xl m-5">Registration</p>
-      <Input label="email" handleInput={handleInput} placeholder="email" />
-      <Input
-        label="password"
-        handleInput={handleInput}
-        type="password"
-        placeholder="password"
-      />
-      <Input
-        label="firstName"
-        handleInput={handleInput}
-        placeholder="first name"
-      />
-      <Input
-        label="lastName"
-        handleInput={handleInput}
-        placeholder="last name"
-      />
-      <Input label="age" handleInput={handleInput} placeholder="age" />
+      <p className="m-2 text-rose-500">{errorMessage}</p>
+      {[
+        { value: "", name: "email", type: "", placeholder: "email" },
+        {
+          value: "",
+          name: "password",
+          type: "password",
+          placeholder: "password",
+        },
+        { value: "", name: "firstName", type: "", placeholder: "first name" },
+        { value: "", name: "lastName", type: "", placeholder: "last name" },
+        { value: "", name: "age", type: "number", placeholder: "age" },
+      ].map((e) => {
+        return (
+          <Input
+            error={errors[e.name]}
+            name={e.name}
+            value={e.value}
+            className="border-rose-400"
+            label={e.name}
+            handleInput={handleInput}
+            type={e.type}
+            placeholder={e.placeholder}
+          />
+        );
+      })}
 
-      <button className={buttonCls} onClick={registerUser}>
-        Register
+      <button
+        className=" text-white hover:text-white w-24 h-12 rounded-lg bg-primary-2 flex items-center justify-center "
+        onClick={() => sendRequest()}
+      >
+        Request Account
       </button>
-      <a className="my-5">OR</a>
-      <button onClick={registerWithGmail}>
-        <FcGoogle className="text-green-600 my-5" size={50} />
-      </button>
-      <Link to="/">Already have an account?</Link>
+
+      <Link to="/" className="m-10">
+        <a className="my-5">Already have an account?</a>
+      </Link>
     </div>
   );
 };

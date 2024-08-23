@@ -14,11 +14,84 @@ import {
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
 import { createUserWithEmailAndPassword, signOut } from "firebase/auth";
-
 import { db } from "./firebase";
+import { ENCRYPTION_KEY } from "./config";
+import aes from "crypto-js/aes";
+import CryptoJS from "crypto-js";
+
+const accountRequestCreate = async (data) => {
+  var encryptedPassword = aes.encrypt(data.password, ENCRYPTION_KEY).toString();
+  try {
+    addDoc(collection(db, "user-account-request"), {
+      email: data.email,
+      password: encryptedPassword,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      age: data.age,
+    });
+  } catch (error) {
+    return false;
+  }
+  return true;
+};
+
+const accountRequestAccept = async (userInfo) => {
+  let decryptedPassword = aes.decrypt(userInfo.password, ENCRYPTION_KEY);
+  let decryptedString = decryptedPassword.toString(CryptoJS.enc.Utf8);
+  console.log(userInfo);
+  console.log(decryptedString);
+  try {
+    await createUserWithEmailAndPassword(auth, userInfo.email, decryptedString)
+      .then((userCredential) => {
+        // Signed in
+        const user = userCredential.user;
+        // register userinformation in database
+        registerData(
+          user.uid,
+          userInfo.email,
+          userInfo.firstName,
+          userInfo.lastName,
+          userInfo.age,
+        );
+        console.log(user);
+        return true;
+        // ...
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(errorMessage);
+        console.log(errorCode);
+        // ..
+      });
+  } catch (error) {
+    return false;
+  }
+  return true;
+};
+
+const accountRequestDelete = async (docId) => {
+  const docRef = doc(db, "user-account-request", docId);
+  try {
+    deleteDoc(docRef);
+  } catch (error) {
+    return false;
+  }
+  return true;
+};
+
+const accountResquetsGet = async () => {
+  let data = [];
+  const querySnapshot = await getDocs(collection(db, "user-account-request"));
+  querySnapshot.forEach((doc) => {
+    // doc.data() is never undefined for query doc snapshots
+    console.log(doc.data());
+    data.push({ data: doc.data(), id: doc.id });
+  });
+  return data;
+};
 
 const bookLongTime = async (data) => {
-  console.log(data);
   let docRef = addDoc(
     collection(db, "user-reservations", data.id, "my-reservations"),
     {
@@ -36,25 +109,25 @@ const bookLongTime = async (data) => {
       type: "Multi day trip",
       timestamp: new Date(),
       longTrip: data.longTrip,
-    }
+    },
   );
   return docRef;
 };
 
-const bookTime = async (data) => {
+const bookTime = async (data, startDate, endDate) => {
   const date = `${data.startDate.getFullYear()}-${getMonthStringLC(
-    data.startDate.getMonth()
+    data.startDate.getMonth(),
   )}`;
   let start;
   let end;
-  console.log(data.startDate);
-  console.log(data.endDate);
-  if (data.startDate > data.endDate) {
-    start = data.endDate;
-    end = data.startDate;
+  console.log(startDate);
+  console.log(endDate);
+  if (startDate > endDate) {
+    start = endDate;
+    end = startDate;
   } else {
-    start = data.startDate;
-    end = data.endDate;
+    start = startDate;
+    end = endDate;
   }
   console.log(start);
   console.log(end);
@@ -75,7 +148,7 @@ const bookTime = async (data) => {
         cost: data.cost,
         longTrip: data.longTrip,
         timestamp: new Date(),
-      }
+      },
     );
     await setDoc(
       doc(db, "user-reservations", data.id, "my-reservations", docRef.id),
@@ -93,7 +166,7 @@ const bookTime = async (data) => {
         cost: data.cost,
         longTrip: data.longTrip,
         timestamp: new Date(),
-      }
+      },
     );
     console.log("Document written with ID: ", docRef.id);
   } catch (e) {
@@ -106,8 +179,8 @@ const getMonthReservations = async (date) => {
   const querySnapshot = await getDocs(
     query(
       collection(db, "data-timeframe", date, "reservations"),
-      orderBy("startDate")
-    )
+      orderBy("startDate"),
+    ),
   );
   querySnapshot.forEach((doc) => {
     // doc.data() is never undefined for query doc snapshots
@@ -130,7 +203,7 @@ const createUserInfo = () => {};
 
 const writeKms = async (cardDate, data, id, userID) => {
   const date = `${cardDate.getFullYear()}-${getMonthStringLC(
-    cardDate.getMonth()
+    cardDate.getMonth(),
   )}`;
 
   console.log(db);
@@ -202,16 +275,15 @@ const signIn = (credentials) => {
 const register = async (email, userInfo) => {
   await createUserWithEmailAndPassword(auth, email, userInfo.password)
     .then((userCredential) => {
-      // Signed in
       const user = userCredential.user;
+      // register userinformation in database
       registerData(
         user.uid,
         email,
         userInfo.firstName,
         userInfo.lastName,
-        userInfo.age
+        userInfo.age,
       );
-      console.log(user);
       return true;
       // ...
     })
@@ -233,7 +305,7 @@ const editTime = async (data, times, userID) => {
     "user-reservations",
     userID,
     "my-reservations",
-    data.id
+    data.id,
   );
   await updateDoc(docRef, {
     startDate: times.startDate,
@@ -254,7 +326,7 @@ const updatePayment = async (data, userID) => {
     "user-reservations",
     userID,
     "my-reservations",
-    data.id
+    data.id,
   );
   await updateDoc(docRef, {
     paid: true,
@@ -273,7 +345,7 @@ const deleteBooking = async (id, data, userID) => {
     "user-reservations",
     userID,
     "my-reservations",
-    data.id
+    data.id,
   );
 
   await deleteDoc(docRef);
@@ -296,7 +368,7 @@ const editData = async (id, reserverID, data, date) => {
     "user-reservations",
     reserverID,
     "my-reservations",
-    id
+    id,
   );
   console.log(id);
   console.log(reserverID);
@@ -370,6 +442,40 @@ const registerData = async (uid, email, fName, lName, age) => {
 };
 
 const costPerKM = 0.3;
+
+const usersGet = async () => {
+  let users = [];
+  const querySnapshot = await getDocs(collection(db, "users"));
+  querySnapshot.forEach((doc) => {
+    // doc.data() is never undefined for query doc snapshots
+    const newData = { id: doc.id, data: doc.data() };
+    users.push(newData);
+  });
+  return users;
+};
+
+const addNewCar = async (carInfo) => {
+  console.log("adding car from utils");
+  console.log(carInfo);
+  try {
+    await setDoc(doc(db, "carlist", carInfo.id), carInfo);
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+  console.log("added");
+  return true;
+};
+
+const carDelete = async (id) => {
+  const docRef = doc(db, "carlist", id);
+  try {
+    deleteDoc(docRef);
+  } catch (error) {
+    return false;
+  }
+  return true;
+};
 
 const getMonthString = (month) => {
   switch (month) {
@@ -479,4 +585,13 @@ export {
   updatePayment,
   makeSuper,
   getMonthReservations,
+  // admin => users info
+  usersGet,
+  addNewCar,
+  carDelete,
+  // account requests
+  accountRequestAccept,
+  accountRequestCreate,
+  accountResquetsGet,
+  accountRequestDelete,
 };
