@@ -40,7 +40,6 @@ const Authentication = (props) => {
 
   return (
     <div className="w-screen h-screen flex items-center justify-center flex-col -translate-y-10 select-none">
-      <img alt="YWAM BB" className="h-28 -translate-x-2" src={ywamPicture} />
       <a className="text-2xl mb-3 text-gray-900">Car Pool</a>
       <p className="p-4 text-red-500">{errorMessage}</p>
       <Input label="email" handleInput={handleInput} placeholder="email" />
