@@ -1,4 +1,4 @@
-# Car Web App
+# Car Booking Web App
 An app used to book cars
 
 ## The App
